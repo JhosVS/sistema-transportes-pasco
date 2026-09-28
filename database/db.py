@@ -1,19 +1,28 @@
+import os
 import mysql.connector
 from mysql.connector import pooling
-from config import Config
+
+# Cargar credenciales desde Variables de Entorno (Render/Producción)
+# Si no existen, usa los valores locales por defecto
+DB_HOST = os.environ.get('MYSQLHOST', 'localhost')
+DB_USER = os.environ.get('MYSQLUSER', 'root')
+DB_PASSWORD = os.environ.get('MYSQLPASSWORD', '')
+DB_NAME = os.environ.get('MYSQLDATABASE', 'bd_transporte_pasco')
+DB_PORT = int(os.environ.get('MYSQLPORT', 3306))
 
 try:
     db_pool = pooling.MySQLConnectionPool(
         pool_name="mypool",
         pool_size=5,
-        host=Config.DB_HOST,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
-        database=Config.DB_NAME,
-        port=Config.DB_PORT
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        port=DB_PORT
     )
+    print("✅ Conexión con la Base de Datos establecida correctamente.")
 except mysql.connector.Error as err:
-    print(f"Error al conectar con la base de datos MySQL: {err}")
+    print(f"❌ Error al conectar con la base de datos MySQL: {err}")
     db_pool = None
 
 def get_connection():
