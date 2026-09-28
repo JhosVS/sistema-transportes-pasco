@@ -1,16 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for
-import mysql.connector
+from database.db import get_connection
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
-
-# Configuración directa de la conexión a MySQL
-def get_db_connection():
-    return mysql.connector.connect(
-        host='localhost',
-        user='root',         # Cambia esto si tu usuario de MySQL es diferente
-        password='',         # Coloca tu contraseña de MySQL aquí
-        database='bd_transporte_pasco'
-    )
 
 @admin_bp.route('/')
 @admin_bp.route('/dashboard')
@@ -18,7 +9,7 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
 
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True) # dictionary=True permite acceder a las columnas por nombre
 
     try:
@@ -65,7 +56,7 @@ def dashboard():
         labels_flota = [f['estado'] for f in flota_db] if flota_db else ['Sin buses']
         data_flota = [f['cantidad'] for f in flota_db] if flota_db else [0]
 
-        # 4. Gráfico 3: Top Rutas con más pasajes vendidos (Corregido)
+        # 4. Gráfico 3: Top Rutas con más pasajes vendidos
         cursor.execute("""
             SELECT 
                 CONCAT(so.nombre_sede, ' ➔ ', sd.nombre_sede) AS ruta,
