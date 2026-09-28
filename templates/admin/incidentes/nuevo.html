@@ -1,0 +1,65 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Nuevo Incidente{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 650px;">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-shield-exclamation text-warning me-2"></i>Registrar Incidente en Ruta</h5>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">VIAJE AFECTADO</label>
+                    <select name="id_viaje" class="form-select border-light-subtle" required>
+                        <option value="">Seleccione el viaje...</option>
+                        {% for v in viajes %}
+                            <option value="{{ v.id_viaje }}">
+                                {{ v.fecha_salida.strftime('%d/%m/%Y') }} {{ v.hora_salida }} hrs — {{ v.origen }} ➔ {{ v.destino }} [{{ v.placa }}]
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">TIPO DE INCIDENTE</label>
+                        <select name="tipo_incidente" class="form-select border-light-subtle" required>
+                            <option value="Falla Mecánica">Falla Mecánica</option>
+                            <option value="Bloqueo de Vía">Bloqueo de Vía / Protesta</option>
+                            <option value="Clima / Derrumbe">Clima / Derrumbe</option>
+                            <option value="Accidente">Accidente de Tránsito</option>
+                            <option value="Control Policial/SUTRAN">Control Policial / SUTRAN</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">RETRASO ESTIMADO (MINUTOS)</label>
+                        <input type="number" name="minutos_retraso_estimado" class="form-control border-light-subtle" value="0" min="0" step="5">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">LUGAR REFERENCIAL</label>
+                    <input type="text" name="lugar_referencial" class="form-control border-light-subtle" placeholder="Ej. Km 85 Carretera Central - Ticlio" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-muted">DESCRIPCIÓN DE LO SUCEDIDO</label>
+                    <textarea name="descripcion" class="form-control border-light-subtle" rows="3" placeholder="Detalle las causas y acciones tomadas..." required></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <a href="{{ url_for('incidentes.listar_incidentes') }}" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i> Volver
+                    </a>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark px-4">
+                        Guardar Incidente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

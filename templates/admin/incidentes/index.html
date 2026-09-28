@@ -1,0 +1,69 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Incidentes en Ruta{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark mb-0">
+            <i class="bi bi-exclamation-triangle text-warning me-2"></i>Reporte de Incidentes en Ruta
+        </h4>
+        <a href="{{ url_for('incidentes.nuevo_incidente') }}" class="btn btn-warning text-dark fw-bold btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Registrar Incidente
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase text-muted">
+                        <tr>
+                            <th>Fecha/Hora Reporte</th>
+                            <th>Viaje / Ruta</th>
+                            <th>Bus / Conductor</th>
+                            <th>Tipo</th>
+                            <th>Lugar</th>
+                            <th>Retraso Est.</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        {% for i in incidentes %}
+                        <tr>
+                            <td class="fw-semibold">{{ i.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ i.origen }} ➔ {{ i.destino }}</div>
+                                <div class="text-muted small">{{ i.fecha_salida.strftime('%d/%m/%Y') }} - {{ i.hora_salida }} hrs</div>
+                            </td>
+                            <td>
+                                <div>{{ i.marca }} ({{ i.placa }})</div>
+                                <div class="text-muted small">{{ i.conductor_nombre }} {{ i.conductor_apellido }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning-subtle text-dark border border-warning">
+                                    {{ i.tipo_incidente }}
+                                </span>
+                            </td>
+                            <td>{{ i.lugar_referencial }}</td>
+                            <td>
+                                {% if i.minutos_retraso_estimado > 0 %}
+                                    <span class="text-danger fw-bold">+{{ i.minutos_retraso_estimado }} min</span>
+                                {% else %}
+                                    <span class="text-muted">Sin retraso</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted" style="max-width: 250px;">{{ i.descripcion }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No se han registrado incidentes en ruta.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'public/base_public.html' %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="login-bg-wrapper d-flex align-items-center justify-content-center">
+    <div class="container my-auto">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    <div class="card-body p-4 p-sm-5 bg-white">
+                        
+                        <!-- Encabezado del Formulario -->
+                        <div class="text-center mb-4">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-person-lock fs-2"></i>
+                            </div>
+                            <h4 class="fw-bold text-dark mb-1">Acceso Personal</h4>
+                            <p class="text-muted small">Ingresa tus credenciales para acceder al sistema</p>
+                        </div>
+
+                        <!-- Formulario de Login -->
+                        <form action="{{ url_for('auth.login') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold text-secondary small">Correo Electrónico</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-envelope text-muted"></i>
+                                    </span>
+                                    <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" placeholder="admin@transportes.com" required autofocus>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-semibold text-secondary small">Contraseña</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-key text-muted"></i>
+                                    </span>
+                                    <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="••••••••" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning w-100 fw-bold py-2 shadow-sm text-dark">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Ocultar el scroll horizontal/vertical globalmente mientras se esté en login */
+    body {
+        overflow: hidden;
+    }
+
+    .login-bg-wrapper {
+        /* Resta la altura combinada estimada del Navbar (~56px) y Footer (~55px) */
+        height: calc(100vh - 111px); 
+        background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
+                    url("{{ url_for('static', filename='img/bus-1.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+</style>
+{% endblock %}

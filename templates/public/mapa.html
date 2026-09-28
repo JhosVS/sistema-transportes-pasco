@@ -1,0 +1,173 @@
+{% extends 'public/base_public.html' %}
+
+{% block title %}Nuestras Sedes y Cobertura{% endblock %}
+
+{% block content %}
+<!-- CSS de Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+    /* Estilos personalizados para el popup del mapa */
+    .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .leaflet-popup-content {
+        margin: 0;
+        width: 280px !important;
+    }
+    .popup-header {
+        background: #212529;
+        color: #fff;
+        padding: 12px 15px;
+    }
+    .popup-body {
+        padding: 15px;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Encabezado de la Sección -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-8">
+            <span class="badge bg-warning text-dark font-monospace text-uppercase mb-1">
+                <i class="bi bi-geo-alt-fill me-1"></i> Red de Terminales
+            </span>
+            <h3 class="fw-bold text-dark mb-1">Nuestras Sedes & Rutas Interprovinciales</h3>
+            <p class="text-muted small mb-0">Explora la ubicación exacta de nuestras agencias y el recorrido de nuestras unidades en carretera.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+            <span class="badge bg-light text-dark border p-2 rounded-3">
+                <i class="bi bi-info-circle text-primary me-1"></i> Cambia a vista satelital desde el control del mapa
+            </span>
+        </div>
+    </div>
+
+    <!-- Contenedor del Mapa -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div id="map" style="height: 580px; width: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- JS de Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const sedes = {{ sedes | tojson }};
+
+    // 1. Capa Estándar (Callejero OpenStreetMap)
+    const capaCalles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    });
+
+    // 2. Capa Satelital (Esri World Imagery - Alta calidad Gratuito)
+    const capaSatelital = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    // Inicializar el mapa
+    const map = L.map('map', {
+        center: [-10.6672, -76.2561], // Coordenadas centrales de Perú/Pasco
+        zoom: 7,
+        layers: [capaCalles] // Capa por defecto
+    });
+
+    // Selector de Capas (Top Right)
+    const baseMaps = {
+        "🗺️ Vista Mapa": capaCalles,
+        "🛰️ Vista Satelital": capaSatelital
+    };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+    if (!sedes || sedes.length === 0) return;
+
+    const coordsArray = [];
+
+    // Icono personalizado de Bus/Terminal
+    const busIcon = L.divIcon({
+        className: 'custom-bus-icon',
+        html: `<div style="background-color: #ffc107; color: #000; border: 2px solid #000; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                <i class="bi bi-bus-front-fill"></i>
+               </div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18]
+    });
+
+    // Dibujar marcadores para cada sede
+    sedes.forEach(s => {
+        const lat = parseFloat(s.latitud);
+        const lng = parseFloat(s.longitud);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            coordsArray.push([lat, lng]);
+
+            // Formato de enlace a Google Maps para navegación GPS
+            const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+            // HTML Estructurado y vistoso para el Popup
+            const popupContent = `
+                <div class="popup-header">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="badge bg-warning text-dark fw-bold">AGENCIA</span>
+                        <small class="text-white-50"><i class="bi bi-clock me-1"></i>Atención 24/7</small>
+                    </div>
+                    <h6 class="fw-bold mb-0 mt-1 text-white">${s.nombre_sede}</h6>
+                </div>
+                <div class="popup-body">
+                    <p class="small text-secondary mb-2">
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> ${s.direccion}
+                    </p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="${googleMapsUrl}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill fw-bold">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> Abrir en Google Maps
+                        </a>
+                        <a href="{{ url_for('public.buscar_viaje') }}" class="btn btn-warning btn-sm rounded-pill text-dark fw-bold">
+                            <i class="bi bi-ticket-perforated me-1"></i> Consultar Pasajes
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            L.marker([lat, lng], { icon: busIcon })
+                .addTo(map)
+                .bindPopup(popupContent);
+        }
+    });
+
+    // 3. Trazar ruta interprovincial que conecta las sedes por carretera real (OSRM)
+    if (coordsArray.length > 1) {
+        const osrmCoords = sedes.map(s => `${s.longitud},${s.latitud}`).join(';');
+        const urlOSRM = `https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`;
+
+        fetch(urlOSRM)
+            .then(res => res.json())
+            .then(data => {
+                if (data.routes && data.routes[0]) {
+                    const routeGeoJSON = data.routes[0].geometry;
+
+                    L.geoJSON(routeGeoJSON, {
+                        style: {
+                            color: '#ffc107',
+                            weight: 6,
+                            opacity: 0.9,
+                            dashArray: '10, 10' // Efecto de línea punteada estilo ruta
+                        }
+                    }).addTo(map);
+                }
+            })
+            .catch(() => {
+                L.polyline(coordsArray, { color: '#ffc107', weight: 5, dashArray: '8, 8' }).addTo(map);
+            });
+
+        // Enfocar el mapa para abarcar todas las sedes automáticamente
+        map.fitBounds(L.latLngBounds(coordsArray), { padding: [50, 50] });
+    }
+});
+</script>
+{% endblock %}

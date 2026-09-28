@@ -1,0 +1,88 @@
+{% extends 'public/base_public.html' %}
+
+{% block title %}Datos del Pasajero{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 650px;">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-1">Paso 1: Datos del Comprador</h5>
+            <p class="text-muted small mb-4">Ingrese su DNI para autocompletar sus datos con RENIEC.</p>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">DNI / DOCUMENTO</label>
+                    <div class="input-group">
+                        <input type="text" id="num_documento" name="num_documento" class="form-control" maxlength="8" placeholder="Ingrese 8 dígitos" required autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="btn_consultar">
+                            <i class="bi bi-search"></i> Consultar
+                        </button>
+                    </div>
+                    <div id="dni_status" class="small mt-1"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">NOMBRES Y APELLIDOS</label>
+                    <input type="text" id="nombres_razon_social" name="nombres_razon_social" class="form-control" required placeholder="Nombre completo">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">TELÉFONO / CELULAR</label>
+                        <input type="tel" name="telefono" class="form-control" placeholder="987654321" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">CORREO ELECTRÓNICO</label>
+                        <input type="email" name="email" class="form-control" placeholder="correo@ejemplo.com">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+                    <a href="{{ url_for('public.buscar_viaje') }}" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark px-4">
+                        Continuar a Asientos <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('btn_consultar').addEventListener('click', consultarRENIEC);
+document.getElementById('num_documento').addEventListener('keyup', function(e) {
+    if (this.value.length === 8) consultarRENIEC();
+});
+
+function consultarRENIEC() {
+    const dniInput = document.getElementById('num_documento');
+    const dni = dniInput.value.trim();
+    const statusText = document.getElementById('dni_status');
+    const inputNombre = document.getElementById('nombres_razon_social');
+
+    if (dni.length !== 8) return;
+
+    statusText.textContent = 'Buscando en RENIEC...';
+    statusText.className = 'small text-muted mt-1';
+
+    fetch(`/reserva/api/dni/${dni}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                inputNombre.value = data.nombres_completos;
+                statusText.textContent = '✓ Verificado por RENIEC';
+                statusText.className = 'small text-success mt-1 fw-semibold';
+            } else {
+                statusText.textContent = 'No se encontró en RENIEC. Ingrese los nombres manualmente.';
+                statusText.className = 'small text-warning mt-1';
+            }
+        })
+        .catch(() => {
+            statusText.textContent = 'Servicio no disponible. Complete manualmente.';
+            statusText.className = 'small text-secondary mt-1';
+        });
+}
+</script>
+{% endblock %}

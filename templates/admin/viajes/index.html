@@ -1,0 +1,39 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Horarios Recurrentes Configurados</h2>
+    <a href="{{ url_for('admin_viajes.crear') }}" class="btn btn-primary">+ Nuevo Horario</a>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Día</th>
+            <th>Hora</th>
+            <th>Ruta</th>
+            <th>Vehículo</th>
+            <th>Conductor</th>
+            <th>Precio Pasaje</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in horarios %}
+        <tr>
+            <td><strong>{{ h.dia_semana }}</strong></td>
+            <td>{{ h.hora_salida }}</td>
+            <td>{{ h.origen }} ➔ {{ h.destino }}</td>
+            <td>{{ h.placa }} ({{ h.marca }})</td>
+            <td>{{ h.conductor }}</td>
+            <td>S/ {{ "%.2f"|format(h.precio_pasaje_base) }}</td>
+            <td><span class="badge bg-success">{{ h.estado }}</span></td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="7" class="text-center">No hay horarios registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

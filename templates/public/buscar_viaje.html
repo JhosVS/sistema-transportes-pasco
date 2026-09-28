@@ -1,0 +1,130 @@
+{% extends 'public/base_public.html' %}
+
+{% block title %}Buscar Viaje{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 850px;">
+
+    <!-- Tarjeta del Buscador (Diseño limpio y ordenado) -->
+    <div class="card border-0 shadow-sm mb-4 bg-white rounded-3">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-search text-warning"></i> Consulta de Próximas Salidas
+            </h5>
+            
+            <form method="POST" action="{{ url_for('public.buscar_viaje') }}" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small text-muted fw-semibold mb-1">ORIGEN</label>
+                    <select id="select_origen" name="id_origen" class="form-select border-light-subtle" required onchange="filtrarDestinos()">
+                        <option value="">Seleccione Origen...</option>
+                        {% for s in sedes %}
+                            <option value="{{ s.id_sede }}" {% if origen_sel == s.id_sede %}selected{% endif %}>
+                                {{ s.nombre_sede }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label small text-muted fw-semibold mb-1">DESTINO</label>
+                    <select id="select_destino" name="id_destino" class="form-select border-light-subtle" required>
+                        <option value="">Seleccione Destino...</option>
+                        {% for s in sedes %}
+                            <option value="{{ s.id_sede }}" {% if destino_sel == s.id_sede %}selected{% endif %}>
+                                {{ s.nombre_sede }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Resultados Minimalista -->
+    {% if viajes %}
+        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+            <span class="text-muted small fw-semibold">Salida más próxima encontrada:</span>
+        </div>
+
+        {% for v in viajes %}
+        <div class="card border-0 shadow-sm mb-3 rounded-3">
+            <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                
+                <!-- Hora y Fecha -->
+                <div style="min-width: 140px;">
+                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle fw-semibold mb-1">
+                        {{ v.dia_nombre }}
+                    </span>
+                    <div class="fs-3 fw-bold text-dark lh-1 mb-1">{{ v.hora_salida }} <span class="fs-6 fw-normal text-muted">hrs</span></div>
+                    <div class="small text-muted"><i class="bi bi-calendar3 me-1"></i>{{ v.fecha_salida }}</div>
+                </div>
+
+                <!-- Datos del Bus -->
+                <div class="flex-grow-1 border-start-md ps-md-3">
+                    <div class="fw-semibold text-dark mb-1">
+                        {{ v.bus }} <span class="badge bg-light text-secondary border fw-normal ms-1">Placa: {{ v.placa }}</span>
+                    </div>
+                    <div class="small text-muted mb-1">
+                        <i class="bi bi-person me-1"></i>{{ v.conductor }}
+                    </div>
+                    <div class="small text-muted">
+                        <i class="bi bi-clock me-1"></i>Duración estim.: {{ v.duracion }} hrs
+                    </div>
+                </div>
+
+                <!-- Precio y Acción -->
+                <div class="text-md-end border-start-md ps-md-3">
+                    <div class="fs-4 fw-bold text-dark mb-0">S/ {{ "%.2f"|format(v.precio) }}</div>
+                    <div class="small text-success fw-semibold mb-2">
+                        <i class="bi bi-check-circle me-1"></i>{{ v.asientos_libres }} asientos libres
+                    </div>
+
+                    {% if v.asientos_libres > 0 %}
+                        <a href="{{ url_for('reservas.cliente', id_viaje=v.id_viaje) }}" class="btn btn-dark btn-sm fw-semibold px-4 rounded-2">
+                            Reservar
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-sm px-4 rounded-2" disabled>Agotado</button>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+</div>
+
+<!-- Script de filtrado sencillo -->
+<script>
+const RUTAS = {{ rutas_json | tojson }};
+
+function filtrarDestinos() {
+    const origenId = parseInt(document.getElementById('select_origen').value);
+    const selectDestino = document.getElementById('select_destino');
+    
+    const destinosValidos = RUTAS
+        .filter(r => r.id_sede_origen === origenId)
+        .map(r => r.id_sede_destino);
+
+    Array.from(selectDestino.options).forEach(opt => {
+        if (!opt.value) return;
+        const valido = destinosValidos.includes(parseInt(opt.value));
+        opt.style.display = valido ? 'block' : 'none';
+        opt.disabled = !valido;
+    });
+
+    if (!destinosValidos.includes(parseInt(selectDestino.value))) {
+        selectDestino.value = "";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", filtrarDestinos);
+</script>
+{% endblock %}

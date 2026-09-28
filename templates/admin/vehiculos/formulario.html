@@ -1,0 +1,107 @@
+{% extends 'admin/base_admin.html' %}
+
+{% set es_edicion = vehiculo is defined and vehiculo %}
+
+{% block title %}
+{{ 'Editar' if es_edicion else 'Nuevo' }} Vehículo
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-bus-front"></i>
+        {{ 'Editar Vehículo' if es_edicion else 'Nuevo Vehículo' }}
+    </h4>
+
+    <a href="{{ url_for('vehiculos.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+
+</div>
+
+<form method="POST"
+    action="{{ url_for('vehiculos.editar', id_vehiculo=vehiculo.id_vehiculo) if es_edicion else url_for('vehiculos.crear') }}">
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="form-label">Placa</label>
+                    <input type="text" name="placa" class="form-control"
+                        value="{{ vehiculo.placa if es_edicion else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Marca</label>
+                    <input type="text" name="marca" class="form-control"
+                        value="{{ vehiculo.marca if es_edicion else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Modelo</label>
+                    <input type="text" name="modelo" class="form-control"
+                        value="{{ vehiculo.modelo if es_edicion else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Color</label>
+                    <input type="text" name="color" class="form-control"
+                        value="{{ vehiculo.color if es_edicion else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Capacidad de asientos</label>
+                    <input type="number" name="capacidad_asientos" class="form-control"
+                        value="{{ vehiculo.capacidad_asientos if es_edicion else '' }}" min="1" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Capacidad de carga (kg)</label>
+                    <input type="number" name="capacidad_carga_kg" class="form-control"
+                        value="{{ vehiculo.capacidad_carga_kg if es_edicion else '' }}" min="0" step="0.01" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Estado</label>
+
+                    <select name="estado" class="form-select">
+
+                        <option value="Disponible" {% if es_edicion and vehiculo.estado=='Disponible' %}selected{% endif
+                            %}>
+                            Disponible
+                        </option>
+
+                        <option value="En mantenimiento" {% if es_edicion and vehiculo.estado=='En mantenimiento'
+                            %}selected{% endif %}>
+                            En mantenimiento
+                        </option>
+
+                        <option value="Inactivo" {% if es_edicion and vehiculo.estado=='Inactivo' %}selected{% endif %}>
+                            Inactivo
+                        </option>
+
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-warning text-white">
+                    <i class="bi bi-check-lg"></i>
+                    {{ 'Actualizar' if es_edicion else 'Guardar' }}
+                </button>
+
+                <a href="{{ url_for('vehiculos.index') }}" class="btn btn-light border">
+                    Cancelar
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</form>
+
+{% endblock %}

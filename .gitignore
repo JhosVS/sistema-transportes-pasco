@@ -1,0 +1,16 @@
+# Entornos virtuales
+venv/
+env/
+ENV/
+
+# Byte-compiled / Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Configuración local sensible
+.env
+
+# Archivos de IDEs
+.vscode/
+.idea/

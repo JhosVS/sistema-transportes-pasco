@@ -1,0 +1,131 @@
+{% extends 'admin/base_admin.html' %}
+
+{% set es_edicion = conductor is defined and conductor %}
+
+{% block title %}
+{{ 'Editar' if es_edicion else 'Nuevo' }} Conductor
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-person-badge"></i>
+        {{ 'Editar Conductor' if es_edicion else 'Nuevo Conductor' }}
+    </h4>
+
+    <a href="{{ url_for('conductores.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+
+</div>
+
+<form method="POST"
+    action="{{ url_for('conductores.editar', id_conductor=conductor.id_conductor) if es_edicion else url_for('conductores.crear') }}">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <!-- DNI -->
+                <div class="col-md-6">
+
+                    <label class="form-label">DNI</label>
+
+                    <input type="text" name="dni" class="form-control" value="{{ conductor.dni if es_edicion else '' }}"
+                        maxlength="8" placeholder="Ej. 12345678" required>
+
+                </div>
+
+
+                <!-- NOMBRES -->
+                <div class="col-md-6">
+
+                    <label class="form-label">Nombres</label>
+
+                    <input type="text" name="nombres" class="form-control"
+                        value="{{ conductor.nombres if es_edicion else '' }}" placeholder="Ej. Carlos Alberto" required>
+
+                </div>
+
+
+                <!-- APELLIDOS -->
+                <div class="col-md-6">
+
+                    <label class="form-label">Apellidos</label>
+
+                    <input type="text" name="apellidos" class="form-control"
+                        value="{{ conductor.apellidos if es_edicion else '' }}" placeholder="Ej. Mendoza Ríos" required>
+
+                </div>
+
+
+                <!-- TELEFONO -->
+                <div class="col-md-6">
+
+                    <label class="form-label">Teléfono</label>
+
+                    <input type="tel" name="telefono" class="form-control"
+                        value="{{ conductor.telefono if es_edicion else '' }}" placeholder="Ej. 987654321" required>
+
+                </div>
+
+
+                <!-- LICENCIA -->
+                <div class="col-md-6">
+
+                    <label class="form-label">Licencia de conducir</label>
+
+                    <input type="text" name="licencia_conducir" class="form-control"
+                        value="{{ conductor.licencia_conducir if es_edicion else '' }}" placeholder="Ej. Q12345678"
+                        required>
+
+                </div>
+
+
+                <!-- ESTADO -->
+                <div class="col-md-6">
+
+                    <label class="form-label">Estado</label>
+
+                    <select name="estado" class="form-select">
+
+                        <option value="Activo" {% if es_edicion and conductor.estado=='Activo' %}selected{% endif %}>
+                            Activo
+                        </option>
+
+                        <option value="Inactivo" {% if es_edicion and conductor.estado=='Inactivo' %}selected{% endif
+                            %}>
+                            Inactivo
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="mt-4">
+
+                <button type="submit" class="btn btn-warning text-white">
+                    <i class="bi bi-check-lg"></i>
+                    {{ 'Actualizar' if es_edicion else 'Guardar' }}
+                </button>
+
+                <a href="{{ url_for('conductores.index') }}" class="btn btn-light border">
+                    Cancelar
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</form>
+
+{% endblock %}
