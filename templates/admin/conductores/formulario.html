@@ -9,7 +9,6 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-
     <h4 class="fw-bold mb-0">
         <i class="bi bi-person-badge"></i>
         {{ 'Editar Conductor' if es_edicion else 'Nuevo Conductor' }}
@@ -18,112 +17,103 @@
     <a href="{{ url_for('conductores.index') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
-
 </div>
 
 <form method="POST"
     action="{{ url_for('conductores.editar', id_conductor=conductor.id_conductor) if es_edicion else url_for('conductores.crear') }}">
 
     <div class="card shadow-sm border-0">
-
         <div class="card-body">
 
             <div class="row g-3">
 
                 <!-- DNI -->
-                <div class="col-md-6">
-
-                    <label class="form-label">DNI</label>
-
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">DNI</label>
                     <input type="text" name="dni" class="form-control" value="{{ conductor.dni if es_edicion else '' }}"
-                        maxlength="8" placeholder="Ej. 12345678" required>
-
+                        maxlength="8" pattern="[0-9]{8}" placeholder="Ej. 45892134" required>
                 </div>
-
 
                 <!-- NOMBRES -->
-                <div class="col-md-6">
-
-                    <label class="form-label">Nombres</label>
-
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Nombres</label>
                     <input type="text" name="nombres" class="form-control"
-                        value="{{ conductor.nombres if es_edicion else '' }}" placeholder="Ej. Carlos Alberto" required>
-
+                        value="{{ conductor.nombres if es_edicion else '' }}" placeholder="Ej. Juan Carlos" required>
                 </div>
-
 
                 <!-- APELLIDOS -->
-                <div class="col-md-6">
-
-                    <label class="form-label">Apellidos</label>
-
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Apellidos</label>
                     <input type="text" name="apellidos" class="form-control"
-                        value="{{ conductor.apellidos if es_edicion else '' }}" placeholder="Ej. Mendoza Ríos" required>
-
+                        value="{{ conductor.apellidos if es_edicion else '' }}" placeholder="Ej. Pérez Quispe" required>
                 </div>
 
-
-                <!-- TELEFONO -->
-                <div class="col-md-6">
-
-                    <label class="form-label">Teléfono</label>
-
+                <!-- TELÉFONO -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Teléfono</label>
                     <input type="tel" name="telefono" class="form-control"
-                        value="{{ conductor.telefono if es_edicion else '' }}" placeholder="Ej. 987654321" required>
-
+                        value="{{ conductor.telefono if es_edicion else '' }}" placeholder="Ej. 963852741" required>
                 </div>
 
-
-                <!-- LICENCIA -->
-                <div class="col-md-6">
-
-                    <label class="form-label">Licencia de conducir</label>
-
+                <!-- NÚMERO DE LICENCIA -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Licencia de conducir</label>
                     <input type="text" name="licencia_conducir" class="form-control"
-                        value="{{ conductor.licencia_conducir if es_edicion else '' }}" placeholder="Ej. Q12345678"
-                        required>
-
+                        value="{{ conductor.licencia_conducir if es_edicion else '' }}" placeholder="Ej. Q45892134" required>
                 </div>
 
+                <!-- CATEGORÍA LICENCIA -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Categoría Licencia</label>
+                    <select name="licencia_categoria" class="form-select" required>
+                        {% set cat_actual = conductor.licencia_categoria if es_edicion else 'A-IIIc' %}
+                        {% for cat in ['A-IIa', 'A-IIb', 'A-IIIa', 'A-IIIb', 'A-IIIc'] %}
+                            <option value="{{ cat }}" {% if cat_actual == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- FECHA VENCIMIENTO LICENCIA -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Vencimiento Licencia</label>
+                    <input type="date" name="licencia_vence" class="form-control"
+                        value="{{ conductor.licencia_vence.strftime('%Y-%m-%d') if es_edicion and conductor.licencia_vence else '' }}" required>
+                </div>
+
+                <!-- FECHA INGRESO -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Fecha de Ingreso</label>
+                    <input type="date" name="fecha_ingreso" class="form-control"
+                        value="{{ conductor.fecha_ingreso.strftime('%Y-%m-%d') if es_edicion and conductor.fecha_ingreso else '' }}">
+                </div>
 
                 <!-- ESTADO -->
-                <div class="col-md-6">
-
-                    <label class="form-label">Estado</label>
-
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Estado</label>
                     <select name="estado" class="form-select">
-
-                        <option value="Activo" {% if es_edicion and conductor.estado=='Activo' %}selected{% endif %}>
+                        <option value="Activo" {% if es_edicion and conductor.estado == 'Activo' %}selected{% endif %}>
                             Activo
                         </option>
-
-                        <option value="Inactivo" {% if es_edicion and conductor.estado=='Inactivo' %}selected{% endif
-                            %}>
+                        <option value="Inactivo" {% if es_edicion and conductor.estado == 'Inactivo' %}selected{% endif %}>
                             Inactivo
                         </option>
-
                     </select>
-
                 </div>
 
             </div>
 
-
             <div class="mt-4">
-
-                <button type="submit" class="btn btn-warning text-white">
+                <button type="submit" class="btn btn-warning text-white fw-bold">
                     <i class="bi bi-check-lg"></i>
-                    {{ 'Actualizar' if es_edicion else 'Guardar' }}
+                    {{ 'Actualizar' if es_edicion else 'Guardar Conductor' }}
                 </button>
 
                 <a href="{{ url_for('conductores.index') }}" class="btn btn-light border">
                     Cancelar
                 </a>
-
             </div>
 
         </div>
-
     </div>
 
 </form>

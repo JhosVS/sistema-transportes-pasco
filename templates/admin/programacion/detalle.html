@@ -1,0 +1,134 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Viaje #{{ v.id_viaje }}{% endblock %}
+
+{% block content %}
+{% set colores = {'Programado': 'secondary', 'En Ruta': 'primary', 'Finalizado': 'success', 'Cancelado': 'danger'} %}
+{% set ruta = v.horario.ruta %}
+{% set retraso = v.minutos_retraso_llegada %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="m-0 fw-bold"><i class="bi bi-calendar-check"></i> Viaje #{{ v.id_viaje }}</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('programacion.editar', id_viaje=v.id_viaje) }}" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <a href="{{ url_for('programacion.index') }}" class="btn btn-light border btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold m-0">{{ ruta.origen.ciudad }} ➔ {{ ruta.destino.ciudad }}</h6>
+                    <span class="badge bg-{{ colores[v.estado_viaje] }} px-3 py-2">{{ v.estado_viaje }}</span>
+                </div>
+                <div class="row g-3 small">
+                    <div class="col-6">
+                        <div class="text-muted">Salida programada</div>
+                        <div class="fw-bold">{{ v.salida_programada.strftime('%d/%m/%Y %H:%M') }}</div>
+                        <div class="text-muted">Real: {{ v.salida_real.strftime('%d/%m/%Y %H:%M') if v.salida_real else '-' }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Llegada programada</div>
+                        <div class="fw-bold">{{ v.llegada_programada.strftime('%d/%m/%Y %H:%M') }}</div>
+                        <div class="text-muted">
+                            Real: {{ v.llegada_real.strftime('%d/%m/%Y %H:%M') if v.llegada_real else '-' }}
+                            {% if retraso is not none and retraso > 0 %}<span class="badge bg-warning text-dark ms-1">+{{ retraso }} min</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Vehículo</div>
+                        <div class="fw-bold">{% if vehiculo %}{{ vehiculo.placa }} · {{ vehiculo.marca }} {{ vehiculo.modelo }}{% else %}Sin asignar{% endif %}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Conductor</div>
+                        <div class="fw-bold">{{ conductor.nombre_completo if conductor else 'Por asignar' }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted">Precio pasaje</div>
+                        <div class="fw-bold text-success">S/ {{ "%.2f"|format(v.precio_pasaje) }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted">Clima</div>
+                        <div class="fw-bold">{{ v.clima or '-' }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted">Feriado</div>
+                        <div class="fw-bold">{{ 'Sí' if v.es_feriado else 'No' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Incidentes en ruta</h6>
+                {% for i in v.incidentes %}
+                <div class="border rounded p-2 mb-2 small">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-capitalize">{{ i.tipo_incidente.replace('_', ' ') }}</strong>
+                        <span class="text-muted">{{ i.fecha_hora.strftime('%d/%m/%Y %H:%M') }} · +{{ i.minutos_retraso_estimado }} min</span>
+                    </div>
+                    <div class="text-muted">{{ i.lugar_referencial }} — {{ i.descripcion }}</div>
+                </div>
+                {% else %}
+                <div class="text-muted small">Sin incidentes registrados.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Resumen de ventas</h6>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted">Pasajes vendidos</span>
+                    <strong>{{ ocupados }} / {{ capacidad }}</strong>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted">Ingresos por pasajes</span>
+                    <strong class="text-success">S/ {{ "%.2f"|format(ingresos_pasajes) }}</strong>
+                </div>
+                <div class="d-flex justify-content-between small mb-2">
+                    <span class="text-muted">Encomiendas</span>
+                    <strong>{{ total_encomiendas }} ({{ "%.2f"|format(kg_encomiendas) }} kg)</strong>
+                </div>
+                <a href="{{ url_for('encomiendas_admin.index', id_viaje=v.id_viaje) }}" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="bi bi-box-seam me-1"></i> Ver encomiendas del viaje
+                </a>
+            </div>
+        </div>
+
+        {% if v.estado_viaje in ('Programado', 'En Ruta') %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold text-danger">Cancelar viaje</h6>
+                <p class="small text-muted mb-2">Use esta opción solo si el viaje no se realizará.</p>
+                <form action="{{ url_for('programacion.cancelar', id_viaje=v.id_viaje) }}" method="POST"
+                      onsubmit="return confirm('¿Cancelar el viaje #{{ v.id_viaje }}? Tiene {{ ocupados }} pasaje(s) vendido(s).');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="bi bi-x-octagon me-1"></i> Cancelar viaje
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% elif v.estado_viaje == 'Cancelado' and v.salida_programada > ahora %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold">Reactivar viaje</h6>
+                <form action="{{ url_for('programacion.reactivar', id_viaje=v.id_viaje) }}" method="POST">
+                    <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Volver a Programado
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

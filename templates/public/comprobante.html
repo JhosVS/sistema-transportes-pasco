@@ -26,11 +26,11 @@
         <!-- Encabezado del Boleto -->
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
             <div>
-                <h4 class="fw-bold text-dark mb-0"><i class="bi bi-bus-front text-warning me-2"></i>Transportes Pasco</h4>
+                <h4 class="fw-bold text-dark mb-0"><i class="bi bi-bus-front text-warning me-2"></i>Agencia Transportes</h4>
                 <small class="text-muted">RUC: 20123456789</small>
             </div>
             <div class="text-end">
-                <span class="badge bg-success-subtle text-success border border-success px-3 py-2 fw-bold">PAGADO</span>
+                <span class="badge bg-success text-white px-3 py-2 fw-bold">PAGADO</span>
                 <div class="small text-muted mt-1">Boleta N° B001-{{ "%06d"|format(reserva.id_reserva) }}</div>
             </div>
         </div>
@@ -38,20 +38,26 @@
         <!-- Datos del Cliente -->
         <div class="row g-2 mb-3 small">
             <div class="col-6">
-                <span class="text-muted">Cliente:</span>
-                <div class="fw-bold">{{ reserva.nombres_razon_social }}</div>
+                <span class="text-muted">Cliente Comprador:</span>
+                <div class="fw-bold text-dark">{{ reserva.nombres_razon_social }}</div>
             </div>
             <div class="col-6">
                 <span class="text-muted">DNI / Documento:</span>
-                <div class="fw-bold">{{ reserva.num_documento }}</div>
+                <div class="fw-bold text-dark">{{ reserva.num_documento }}</div>
             </div>
             <div class="col-6">
                 <span class="text-muted">Fecha Emisión:</span>
-                <div>{{ reserva.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</div>
+                <div>
+                    {% if reserva.fecha_emision and reserva.fecha_emision.strftime %}
+                        {{ reserva.fecha_emision.strftime('%d/%m/%Y %H:%M') }}
+                    {% else %}
+                        {{ reserva.fecha_emision }}
+                    {% endif %}
+                </div>
             </div>
             <div class="col-6">
                 <span class="text-muted">Método de Pago:</span>
-                <div>{{ reserva.metodo_pago }}</div>
+                <div class="text-capitalize">{{ reserva.metodo_pago }}</div>
             </div>
         </div>
 
@@ -61,11 +67,18 @@
         {% for d in detalles %}
         <div class="border rounded p-3 mb-2 bg-light small">
             <div class="d-flex justify-content-between fw-bold text-dark mb-1">
-                <span>{{ d.origen }} ➔ {{ d.destino }}</span>
+                <span>{{ d.origen_ciudad or d.origen }} ➔ {{ d.destino_ciudad or d.destino }}</span>
                 <span>Asiento: #{{ d.numero_asiento }}</span>
             </div>
             <div class="d-flex justify-content-between text-muted">
-                <span>Salida: {{ d.fecha_salida.strftime('%d/%m/%Y') }} - {{ d.hora_salida }} hrs</span>
+                <span>Salida: 
+                    {% if d.fecha_salida and d.fecha_salida.strftime %}
+                        {{ d.fecha_salida.strftime('%d/%m/%Y') }}
+                    {% else %}
+                        {{ d.fecha_salida }}
+                    {% endif %}
+                    - {{ d.hora_salida }} hrs
+                </span>
                 <span>Bus: {{ d.marca }} ({{ d.placa }})</span>
             </div>
             <div class="text-end fw-bold text-dark mt-1">

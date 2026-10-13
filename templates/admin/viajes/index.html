@@ -1,39 +1,117 @@
-{% extends "admin/base_admin.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Horarios Recurrentes{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Horarios Recurrentes Configurados</h2>
-    <a href="{{ url_for('admin_viajes.crear') }}" class="btn btn-primary">+ Nuevo Horario</a>
+    <h4 class="m-0 fw-bold"><i class="bi bi-clock-history"></i> Horarios Recurrentes Configurados</h4>
+    <a href="{{ url_for('admin_viajes.crear', c='1' if is_collapsed else None) }}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo Horario
+    </a>
 </div>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Día</th>
-            <th>Hora</th>
-            <th>Ruta</th>
-            <th>Vehículo</th>
-            <th>Conductor</th>
-            <th>Precio Pasaje</th>
-            <th>Estado</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for h in horarios %}
-        <tr>
-            <td><strong>{{ h.dia_semana }}</strong></td>
-            <td>{{ h.hora_salida }}</td>
-            <td>{{ h.origen }} ➔ {{ h.destino }}</td>
-            <td>{{ h.placa }} ({{ h.marca }})</td>
-            <td>{{ h.conductor }}</td>
-            <td>S/ {{ "%.2f"|format(h.precio_pasaje_base) }}</td>
-            <td><span class="badge bg-success">{{ h.estado }}</span></td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="7" class="text-center">No hay horarios registrados.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark-custom">
+                <tr>
+                    <th>Día</th>
+                    <th>Hora</th>
+                    <th>Ruta Interprovincial</th>
+                    <th>Vehículo Predeterminado</th>
+                    <th>Conductor Predeterminado</th>
+                    <th>Pasaje Base</th>
+                    <th>Carga / Kg</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in horarios %}
+                <tr>
+                    <td class="fw-bold text-primary">{{ h.dia_semana }}</td>
+
+                    <td>
+                        <span class="badge bg-light text-dark border font-monospace fs-6">
+                            <i class="bi bi-clock"></i> {{ h.hora_salida.strftime('%H:%M') if h.hora_salida else '-' }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if h.ruta %}
+                        <strong>{{ h.ruta.origen.ciudad }}</strong> ➔ <strong>{{ h.ruta.destino.ciudad }}</strong>
+                        <br><small class="text-muted">{{ h.ruta.origen.nombre_sede }} ➔ {{ h.ruta.destino.nombre_sede
+                            }}</small>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if h.vehiculo_default %}
+                        <code>{{ h.vehiculo_default.placa }}</code>
+                        <small class="text-muted">({{ h.vehiculo_default.marca }} {{ h.vehiculo_default.modelo
+                            }})</small>
+                        {% else %}
+                        <span class="text-muted small"><em>Por asignar en viaje</em></span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if h.conductor_default %}
+                        {{ h.conductor_default.nombre_completo }}
+                        {% else %}
+                        <span class="text-muted small"><em>Por asignar en viaje</em></span>
+                        {% endif %}
+                    </td>
+
+                    <td class="fw-bold text-success">
+                        S/ {{ "%.2f"|format(h.precio_pasaje_base) }}
+                    </td>
+
+                    <td class="small">
+                        S/ {{ "%.2f"|format(h.precio_kg_carga_base) }} / kg
+                    </td>
+
+                    <td>
+                        {% if h.estado == 'Activo' %}
+                        <span class="badge bg-success">Activo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <a href="{{ url_for('admin_viajes.editar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}"
+                            class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+
+                        {% if h.estado == 'Activo' %}
+                        <form
+                            action="{{ url_for('admin_viajes.eliminar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}"
+                            method="POST" class="d-inline" onsubmit="return confirm('¿Desactivar este horario?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <form
+                            action="{{ url_for('admin_viajes.activar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}"
+                            method="POST" class="d-inline" onsubmit="return confirm('¿Activar este horario?');">
+                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activar">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-3">Sin horarios recurrentes registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

@@ -1,5 +1,6 @@
+# routes/auth/routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from models import UsuarioModel
+from models import db, Usuario
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -16,7 +17,7 @@ def login():
             flash('Por favor completa todos los campos.', 'warning')
             return render_template('auth/login.html')
 
-        usuario = UsuarioModel.get_by_email(email)
+        usuario = Usuario.query.filter_by(email=email).first()
 
         # Validación 1: Verificar existencia
         if not usuario:
@@ -24,23 +25,24 @@ def login():
             return render_template('auth/login.html')
 
         # Validación 2: Verificar si está activo
-        if usuario['estado'] != 'Activo':
+        if usuario.estado != 'Activo':
             flash('Su cuenta se encuentra inactiva. Contacte al administrador.', 'danger')
             return render_template('auth/login.html')
 
-        # Validación 3: Contraseña
-        if UsuarioModel.verificar_password(usuario['password'], password):
-            session['user_id'] = usuario['id_usuario']
-            session['user_nombre'] = usuario['nombre']
-            session['user_email'] = usuario['email']
-            session['id_sede'] = usuario['id_sede']
-            session['nombre_sede'] = usuario.get('nombre_sede', 'Sin Sede')
+        # Validación 3: Verificar contraseña usando el modelo actualizado
+        if usuario.check_password(password):
+            # Si el hash era Bcrypt o texto plano, se migra al formato nativo de Werkzeug
+            if not usuario.password_hash.startswith(('pbkdf2:', 'scrypt:')):
+                usuario.set_password(password)
+                db.session.commit()
 
-            # Si la contraseña estaba en texto plano, la actualizamos a un hash seguro
-            if not usuario['password'].startswith(('pbkdf2:', 'scrypt:')):
-                UsuarioModel.actualizar_password_hash(usuario['id_usuario'], password)
+            session['user_id'] = usuario.id_usuario
+            session['user_nombre'] = usuario.nombres
+            session['user_email'] = usuario.email
+            session['id_sede'] = usuario.id_sede
+            session['nombre_sede'] = usuario.sede.nombre_sede if usuario.sede else 'Sin Sede'
 
-            flash(f'¡Bienvenido(a), {usuario["nombre"]}!', 'success')
+            flash(f'¡Bienvenido(a), {usuario.nombres}!', 'success')
             return redirect(url_for('sedes.index'))
         else:
             flash('Las credenciales ingresadas son incorrectas.', 'danger')

@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
-    /* Estilos personalizados para el popup del mapa */
     .leaflet-popup-content-wrapper {
         border-radius: 12px;
         padding: 0;
@@ -29,7 +28,6 @@
 </style>
 
 <div class="container py-4">
-    <!-- Encabezado de la Sección -->
     <div class="row mb-3 align-items-center">
         <div class="col-md-8">
             <span class="badge bg-warning text-dark font-monospace text-uppercase mb-1">
@@ -45,7 +43,6 @@
         </div>
     </div>
 
-    <!-- Contenedor del Mapa -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div id="map" style="height: 580px; width: 100%;"></div>
@@ -60,24 +57,20 @@
 document.addEventListener("DOMContentLoaded", function () {
     const sedes = {{ sedes | tojson }};
 
-    // 1. Capa Estándar (Callejero OpenStreetMap)
     const capaCalles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
     });
 
-    // 2. Capa Satelital (Esri World Imagery - Alta calidad Gratuito)
     const capaSatelital = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        attribution: 'Tiles &copy; Esri'
     });
 
-    // Inicializar el mapa
     const map = L.map('map', {
-        center: [-10.6672, -76.2561], // Coordenadas centrales de Perú/Pasco
+        center: [-10.6672, -76.2561],
         zoom: 7,
-        layers: [capaCalles] // Capa por defecto
+        layers: [capaCalles]
     });
 
-    // Selector de Capas (Top Right)
     const baseMaps = {
         "🗺️ Vista Mapa": capaCalles,
         "🛰️ Vista Satelital": capaSatelital
@@ -88,7 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const coordsArray = [];
 
-    // Icono personalizado de Bus/Terminal
     const busIcon = L.divIcon({
         className: 'custom-bus-icon',
         html: `<div style="background-color: #ffc107; color: #000; border: 2px solid #000; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
@@ -99,7 +91,6 @@ document.addEventListener("DOMContentLoaded", function () {
         popupAnchor: [0, -18]
     });
 
-    // Dibujar marcadores para cada sede
     sedes.forEach(s => {
         const lat = parseFloat(s.latitud);
         const lng = parseFloat(s.longitud);
@@ -107,10 +98,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!isNaN(lat) && !isNaN(lng)) {
             coordsArray.push([lat, lng]);
 
-            // Formato de enlace a Google Maps para navegación GPS
             const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
-            // HTML Estructurado y vistoso para el Popup
             const popupContent = `
                 <div class="popup-header">
                     <div class="d-flex align-items-center justify-content-between">
@@ -140,7 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // 3. Trazar ruta interprovincial que conecta las sedes por carretera real (OSRM)
     if (coordsArray.length > 1) {
         const osrmCoords = sedes.map(s => `${s.longitud},${s.latitud}`).join(';');
         const urlOSRM = `https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`;
@@ -156,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             color: '#ffc107',
                             weight: 6,
                             opacity: 0.9,
-                            dashArray: '10, 10' // Efecto de línea punteada estilo ruta
+                            dashArray: '10, 10'
                         }
                     }).addTo(map);
                 }
@@ -165,7 +153,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 L.polyline(coordsArray, { color: '#ffc107', weight: 5, dashArray: '8, 8' }).addTo(map);
             });
 
-        // Enfocar el mapa para abarcar todas las sedes automáticamente
         map.fitBounds(L.latLngBounds(coordsArray), { padding: [50, 50] });
     }
 });

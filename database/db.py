@@ -7,7 +7,7 @@ from mysql.connector import pooling
 DB_HOST = os.environ.get('MYSQLHOST', 'localhost')
 DB_USER = os.environ.get('MYSQLUSER', 'root')
 DB_PASSWORD = os.environ.get('MYSQLPASSWORD', '')
-DB_NAME = os.environ.get('MYSQLDATABASE', 'bd_transporte_pasco')
+DB_NAME = os.environ.get('MYSQLDATABASE', 'transportes_carhuamayo')
 DB_PORT = int(os.environ.get('MYSQLPORT', 3306))
 
 try:

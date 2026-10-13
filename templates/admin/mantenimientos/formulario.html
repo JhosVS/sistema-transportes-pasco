@@ -1,0 +1,86 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}{{ 'Editar' if mantenimiento else 'Nuevo' }} Mantenimiento{% endblock %}
+
+{% block content %}
+{# Valor del campo: lo reenviado por el formulario, o el del registro al editar, o vacío #}
+{% macro val(campo, default='') -%}
+    {%- if form and form.get(campo) is not none and form.get(campo) != '' -%}{{ form.get(campo) }}
+    {%- elif mantenimiento -%}{{ mantenimiento[campo] if mantenimiento[campo] is not none else default }}
+    {%- else -%}{{ default }}{%- endif -%}
+{%- endmacro %}
+
+<div class="container py-4" style="max-width: 700px;">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-tools text-warning me-2"></i>{{ 'Editar' if mantenimiento else 'Registrar' }} Mantenimiento
+            </h5>
+
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label small fw-semibold text-muted">VEHÍCULO <span class="text-danger">*</span></label>
+                        {% set sel_veh = (form.get('id_vehiculo') if form and form.get('id_vehiculo') else (mantenimiento.id_vehiculo if mantenimiento else '')) | string %}
+                        <select name="id_vehiculo" class="form-select" required>
+                            <option value="">-- Seleccione --</option>
+                            {% for v in vehiculos %}
+                            <option value="{{ v.id_vehiculo }}" {% if sel_veh == v.id_vehiculo|string %}selected{% endif %}>
+                                {{ v.placa }} — {{ v.marca }} {{ v.modelo }} ({{ "{:,}".format(v.kilometraje_actual) }} km)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label small fw-semibold text-muted">TIPO <span class="text-danger">*</span></label>
+                        {% set sel_tipo = form.get('tipo') if form and form.get('tipo') else (mantenimiento.tipo if mantenimiento else '') %}
+                        <select name="tipo" class="form-select" required>
+                            <option value="">-- Tipo --</option>
+                            {% for t in tipos %}
+                            <option value="{{ t }}" {% if sel_tipo == t %}selected{% endif %}>{{ t|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">DESCRIPCIÓN</label>
+                    <input type="text" name="descripcion" class="form-control" maxlength="200"
+                           placeholder="Ej. Cambio de aceite y filtros" value="{{ val('descripcion') }}">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">FECHA <span class="text-danger">*</span></label>
+                        <input type="date" name="fecha" class="form-control" max="{{ hoy }}" required
+                               value="{{ form.get('fecha') if form and form.get('fecha') else (mantenimiento.fecha.isoformat() if mantenimiento else hoy) }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">KILOMETRAJE AL MOMENTO <span class="text-danger">*</span></label>
+                        <input type="number" name="km_al_momento" class="form-control" min="0" required value="{{ val('km_al_momento') }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">COSTO (S/)</label>
+                        <input type="number" name="costo" class="form-control" min="0" step="0.01" value="{{ val('costo', '0') }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">DÍAS INOPERATIVO</label>
+                        <input type="number" name="dias_inoperativo" class="form-control" min="0" value="{{ val('dias_inoperativo', '0') }}">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <a href="{{ url_for('mantenimientos.index') }}" class="btn btn-light border btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark px-4">
+                        <i class="bi bi-check-lg me-1"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

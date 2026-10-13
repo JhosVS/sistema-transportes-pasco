@@ -1,0 +1,117 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Encomiendas{% endblock %}
+
+{% block content %}
+{% set colores = {'Registrado': 'secondary', 'En transito': 'primary', 'Entregado': 'success', 'Perdido': 'danger'} %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="m-0 fw-bold"><i class="bi bi-box-seam"></i> Encomiendas</h4>
+    <div class="d-flex gap-2">
+        {% for est in estados %}
+        <span class="badge bg-{{ colores[est] }}">{{ est }}: {{ conteo.get(est, 0) }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">BUSCAR (DNI, CLAVE O NOMBRE)</label>
+                <input type="text" name="q" class="form-control form-control-sm" value="{{ q }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">ESTADO</label>
+                <select name="estado" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for est in estados %}
+                    <option value="{{ est }}" {% if estado_sel == est %}selected{% endif %}>{{ est }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">VIAJE</label>
+                <select name="id_viaje" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for v in viajes %}
+                    <option value="{{ v.id_viaje }}" {% if id_viaje_sel == v.id_viaje %}selected{% endif %}>
+                        #{{ v.id_viaje }} · {{ v.fecha_salida.strftime('%d/%m/%Y') }} {{ v.salida_programada.strftime('%H:%M') }}
+                        · {{ v.horario.ruta.origen.ciudad }} ➔ {{ v.horario.ruta.destino.ciudad }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-search"></i> Filtrar</button>
+                <a href="{{ url_for('encomiendas_admin.index') }}" class="btn btn-sm btn-light border" title="Limpiar">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark-custom">
+                <tr>
+                    <th>N°</th>
+                    <th>Viaje</th>
+                    <th>Remitente</th>
+                    <th>Destinatario</th>
+                    <th>Peso</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in encomiendas %}
+                {% set ruta = e.viaje.horario.ruta %}
+                <tr>
+                    <td class="font-monospace">E001-{{ "%06d"|format(e.id_detalle_encomienda) }}</td>
+                    <td>
+                        <strong>{{ ruta.origen.ciudad }}</strong> ➔ <strong>{{ ruta.destino.ciudad }}</strong>
+                        <br><small class="text-muted">
+                            {{ e.viaje.fecha_salida.strftime('%d/%m/%Y') }} · {{ e.viaje.salida_programada.strftime('%H:%M') }} hrs
+                        </small>
+                    </td>
+                    <td>
+                        {{ e.reserva.cliente.nombres_razon_social }}
+                        <br><small class="text-muted">DNI {{ e.reserva.cliente.num_documento }}</small>
+                    </td>
+                    <td>
+                        {{ e.nombre_destinatario }}
+                        <br><small class="text-muted">DNI {{ e.dni_destinatario }}</small>
+                    </td>
+                    <td>{{ "%.2f"|format(e.peso_kg) }} kg</td>
+                    <td class="fw-bold text-success">S/ {{ "%.2f"|format(e.precio_pagado) }}</td>
+                    <td><span class="badge bg-{{ colores[e.estado_entrega] }}">{{ e.estado_entrega }}</span></td>
+                    <td class="text-end">
+                        <a href="{{ url_for('encomiendas_admin.detalle', id_encomienda=e.id_detalle_encomienda) }}"
+                           class="btn btn-sm btn-outline-secondary me-1" title="Ver detalle">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if 'En transito' in transiciones[e.estado_entrega] %}
+                        <form action="{{ url_for('encomiendas_admin.cambiar_estado', id_encomienda=e.id_detalle_encomienda) }}"
+                              method="POST" class="d-inline" onsubmit="return confirm('¿Marcar como En tránsito?');">
+                            <input type="hidden" name="nuevo_estado" value="En transito">
+                            <button type="submit" class="btn btn-sm btn-outline-primary" title="Marcar en tránsito">
+                                <i class="bi bi-truck"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-3">Sin encomiendas para los filtros seleccionados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

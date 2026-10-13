@@ -22,6 +22,10 @@
                 <a href="{{ url_for('mapa.ver_mapa') }}" class="btn btn-outline-light btn-sm fw-semibold me-1">
                     <i class="bi bi-geo-alt-fill text-warning me-1"></i> Rutas y Sedes
                 </a>
+
+                <a href="{{ url_for('encomiendas.seguimiento') }}" class="btn btn-outline-light btn-sm fw-semibold me-1">
+                    <i class="bi bi-box-seam text-warning me-1"></i> Rastrear Encomienda
+                </a>
                 
                 <!-- Acceso al Panel de Control -->
                 <a href="{{ url_for('auth.login') }}" class="btn btn-outline-warning btn-sm fw-semibold">
@@ -31,7 +35,7 @@
         </div>
     </nav>
 
-    <!-- Contenido Principal sin clase 'container' para Full-Width -->
+    <!-- Contenido Principal -->
     <main class="flex-grow-1">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

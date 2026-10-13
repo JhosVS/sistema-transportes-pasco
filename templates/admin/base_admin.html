@@ -58,6 +58,30 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('programacion.') %}active{% endif %}"
+                        href="{{ url_for('programacion.index') }}">
+                        <i class="bi bi-calendar-check me-2"></i> <span>Viajes Programados</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('encomiendas_admin.') %}active{% endif %}"
+                        href="{{ url_for('encomiendas_admin.index') }}">
+                        <i class="bi bi-box-seam me-2"></i> <span>Encomiendas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('mantenimientos.') %}active{% endif %}"
+                        href="{{ url_for('mantenimientos.index') }}">
+                        <i class="bi bi-tools me-2"></i> <span>Mantenimientos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('combustible.') %}active{% endif %}"
+                        href="{{ url_for('combustible.index') }}">
+                        <i class="bi bi-fuel-pump me-2"></i> <span>Combustible</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if request.endpoint and request.endpoint.startswith('incidentes.') %}active{% endif %}"
                         href="{{ url_for('incidentes.listar_incidentes') }}">
                         <i class="bi bi-exclamation-triangle me-2"></i> <span>Incidentes</span>

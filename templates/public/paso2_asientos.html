@@ -44,7 +44,6 @@
 
                 {% for fila in range(num_filas) %}
                 <div class="d-flex justify-content-between mb-2">
-                    <!-- Asientos Lado Izquierdo (2) -->
                     {% set a1 = fila * 4 + 1 %}
                     {% set a2 = fila * 4 + 2 %}
                     <div class="d-flex gap-2">
@@ -62,10 +61,8 @@
                         {% endif %}
                     </div>
 
-                    <!-- Pasillo del Bus -->
                     <div class="pasillo"></div>
 
-                    <!-- Asientos Lado Derecho (2) -->
                     {% set a3 = fila * 4 + 3 %}
                     {% set a4 = fila * 4 + 4 %}
                     <div class="d-flex gap-2">
@@ -86,7 +83,6 @@
                 {% endfor %}
             </div>
 
-            <!-- Leyenda -->
             <div class="d-flex gap-3 mt-3 small">
                 <div><span class="badge bg-white text-success border border-success">Libre</span></div>
                 <div><span class="badge bg-warning text-dark">Seleccionado</span></div>
@@ -94,21 +90,29 @@
             </div>
         </div>
 
-        <!-- Resumen y Confirmación -->
+        <!-- Resumen de Compra -->
         <div class="col-md-5">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body p-4">
                     <h5 class="fw-bold text-dark mb-3">Resumen de la Reserva</h5>
                     
                     <div class="small mb-3">
-                        <div class="text-muted">Pasajero:</div>
+                        <div class="text-muted">Comprador:</div>
                         <div class="fw-bold text-dark">{{ cliente.nombre_cliente }} (DNI: {{ cliente.dni }})</div>
                     </div>
 
                     <div class="small mb-3">
-                        <div class="text-muted">Ruta:</div>
-                        <div class="fw-bold text-dark">{{ viaje.origen }} ➔ {{ viaje.destino }}</div>
-                        <div class="text-muted">{{ viaje.fecha_salida.strftime('%d/%m/%Y') }} - {{ viaje.hora_salida }} hrs</div>
+                        <div class="text-muted">Trayecto:</div>
+                        <div class="fw-bold text-dark">{{ viaje.origen_ciudad }} ➔ {{ viaje.destino_ciudad }}</div>
+                        <div class="text-muted small">{{ viaje.origen }} ➔ {{ viaje.destino }}</div>
+                        <div class="text-muted mt-1">
+                            {% if viaje.fecha_salida and viaje.fecha_salida.strftime %}
+                                {{ viaje.fecha_salida.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                {{ viaje.fecha_salida }}
+                            {% endif %}
+                            - {{ viaje.hora_salida }} hrs
+                        </div>
                     </div>
 
                     <hr>
@@ -119,7 +123,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="small text-muted">Precio por pasaje:</span>
+                        <span class="small text-muted">Precio por Pasaje:</span>
                         <span class="fw-bold text-dark">S/ {{ "%.2f"|format(viaje.precio_pasaje_base) }}</span>
                     </div>
 

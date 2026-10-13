@@ -1,7 +1,11 @@
+# routes/admin/dashboard.py
 from flask import Blueprint, render_template, session, redirect, url_for
-from database.db import get_connection
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
+from models import db, ReservaVenta, DetallePasaje, Vehiculo, ProgramacionViaje, Horario, Ruta, Sede
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
 
 @admin_bp.route('/')
 @admin_bp.route('/dashboard')
@@ -9,75 +13,70 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
 
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True) # dictionary=True permite acceder a las columnas por nombre
+    # 1. KPIs principales
+    ingresos_totales = db.session.query(
+        func.coalesce(func.sum(ReservaVenta.monto_total), 0)
+    ).scalar()
 
-    try:
-        # 1. KPIs principales
-        cursor.execute("SELECT COALESCE(SUM(monto_total), 0) AS ingresos FROM reservas_ventas")
-        ingresos_totales = cursor.fetchone()['ingresos']
+    total_pasajes = db.session.query(
+        func.count(DetallePasaje.id_detalle_pasaje)
+    ).scalar()
 
-        cursor.execute("SELECT COUNT(*) AS total FROM detalle_pasajes")
-        total_pasajes = cursor.fetchone()['total']
+    buses_disponibles = db.session.query(
+        func.count(Vehiculo.id_vehiculo)
+    ).filter(Vehiculo.estado == 'Disponible').scalar()
 
-        cursor.execute("SELECT COUNT(*) AS total FROM vehiculo WHERE estado = 'Disponible'")
-        buses_disponibles = cursor.fetchone()['total']
+    total_buses = db.session.query(
+        func.count(Vehiculo.id_vehiculo)
+    ).scalar()
 
-        cursor.execute("SELECT COUNT(*) AS total FROM vehiculo")
-        total_buses = cursor.fetchone()['total']
+    kpis = {
+        'ingresos_mes': float(ingresos_totales or 0),
+        'total_pasajes_mes': total_pasajes or 0,
+        'buses_activos': buses_disponibles or 0,
+        'total_buses': total_buses or 0,
+        'ocupacion_promedio': 0
+    }
 
-        kpis = {
-            'ingresos_mes': float(ingresos_totales),
-            'total_pasajes_mes': total_pasajes,
-            'buses_activos': buses_disponibles,
-            'total_buses': total_buses,
-            'ocupacion_promedio': 0  # Se calcula automáticamente si hay datos
-        }
+    # 2. Gráfico 1: Ventas por fecha
+    ventas_db = db.session.query(
+        func.date_format(ReservaVenta.fecha_emision, '%d %b').label('fecha'),
+        func.sum(ReservaVenta.monto_total).label('total')
+    ).group_by(
+        func.date(ReservaVenta.fecha_emision),
+        func.date_format(ReservaVenta.fecha_emision, '%d %b')
+    ).order_by(func.date(ReservaVenta.fecha_emision).asc()).limit(14).all()
 
-        # 2. Gráfico 1: Ventas por fecha
-        cursor.execute("""
-            SELECT DATE_FORMAT(fecha_emision, '%d %b') AS fecha, SUM(monto_total) AS total
-            FROM reservas_ventas
-            GROUP BY DATE(fecha_emision), DATE_FORMAT(fecha_emision, '%d %b')
-            ORDER BY DATE(fecha_emision) ASC
-            LIMIT 14
-        """)
-        ventas_db = cursor.fetchall()
-        labels_ventas = [v['fecha'] for v in ventas_db] if ventas_db else ['Sin ventas']
-        data_ventas = [float(v['total']) for v in ventas_db] if ventas_db else [0]
+    labels_ventas = [v.fecha for v in ventas_db] if ventas_db else ['Sin ventas']
+    data_ventas = [float(v.total) for v in ventas_db] if ventas_db else [0]
 
-        # 3. Gráfico 2: Estado de la flota de buses
-        cursor.execute("""
-            SELECT estado, COUNT(*) AS cantidad
-            FROM vehiculo
-            GROUP BY estado
-        """)
-        flota_db = cursor.fetchall()
-        labels_flota = [f['estado'] for f in flota_db] if flota_db else ['Sin buses']
-        data_flota = [f['cantidad'] for f in flota_db] if flota_db else [0]
+    # 3. Gráfico 2: Estado de la flota de buses
+    flota_db = db.session.query(
+        Vehiculo.estado,
+        func.count(Vehiculo.id_vehiculo).label('cantidad')
+    ).group_by(Vehiculo.estado).all()
 
-        # 4. Gráfico 3: Top Rutas con más pasajes vendidos
-        cursor.execute("""
-            SELECT 
-                CONCAT(so.nombre_sede, ' ➔ ', sd.nombre_sede) AS ruta,
-                COUNT(dp.id_detalle_pasaje) AS pasajes_vendidos
-            FROM detalle_pasajes dp
-            INNER JOIN programacion_viaje pv ON dp.id_viaje = pv.id_viaje
-            INNER JOIN horarios h ON pv.id_horario = h.id_horario
-            INNER JOIN rutas r ON h.id_ruta = r.id_ruta
-            INNER JOIN sedes so ON r.id_sede_origen = so.id_sede
-            INNER JOIN sedes sd ON r.id_sede_destino = sd.id_sede
-            GROUP BY r.id_ruta, so.nombre_sede, sd.nombre_sede
-            ORDER BY pasajes_vendidos DESC
-            LIMIT 5
-        """)
-        rutas_db = cursor.fetchall()
-        labels_rutas = [r['ruta'] for r in rutas_db] if rutas_db else ['Sin rutas registradas']
-        data_rutas = [r['pasajes_vendidos'] for r in rutas_db] if rutas_db else [0]
+    labels_flota = [f.estado for f in flota_db] if flota_db else ['Sin buses']
+    data_flota = [f.cantidad for f in flota_db] if flota_db else [0]
 
-    finally:
-        cursor.close()
-        conn.close()
+    # 4. Gráfico 3: Top Rutas con más pasajes vendidos
+    SedeOrigen = aliased(Sede)
+    SedeDestino = aliased(Sede)
+
+    rutas_db = db.session.query(
+        func.concat(SedeOrigen.nombre_sede, ' ➔ ', SedeDestino.nombre_sede).label('ruta'),
+        func.count(DetallePasaje.id_detalle_pasaje).label('pasajes_vendidos')
+    ).join(ProgramacionViaje, DetallePasaje.id_viaje == ProgramacionViaje.id_viaje)\
+     .join(Horario, ProgramacionViaje.id_horario == Horario.id_horario)\
+     .join(Ruta, Horario.id_ruta == Ruta.id_ruta)\
+     .join(SedeOrigen, Ruta.id_sede_origen == SedeOrigen.id_sede)\
+     .join(SedeDestino, Ruta.id_sede_destino == SedeDestino.id_sede)\
+     .group_by(Ruta.id_ruta, SedeOrigen.nombre_sede, SedeDestino.nombre_sede)\
+     .order_by(func.count(DetallePasaje.id_detalle_pasaje).desc())\
+     .limit(5).all()
+
+    labels_rutas = [r.ruta for r in rutas_db] if rutas_db else ['Sin rutas registradas']
+    data_rutas = [r.pasajes_vendidos for r in rutas_db] if rutas_db else [0]
 
     return render_template(
         'admin/dashboard.html',

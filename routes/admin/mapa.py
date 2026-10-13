@@ -1,41 +1,46 @@
 # routes/admin/mapa.py
 import os
 from flask import Blueprint, render_template
-from database.db import get_connection
+from models import Sede, Ruta
 
 mapa_admin_bp = Blueprint('mapa_admin', __name__, url_prefix='/admin/mapa')
 
+
 @mapa_admin_bp.route('/')
 def mostrar_mapa():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    sedes_db = Sede.query.filter(
+        Sede.latitud.isnot(None),
+        Sede.longitud.isnot(None),
+        Sede.activo == True
+    ).all()
 
-    # 1. Obtener sedes con coordenadas
-    cursor.execute("""
-        SELECT id_sede, nombre_sede, direccion, latitud, longitud
-        FROM sedes
-        WHERE latitud IS NOT NULL AND longitud IS NOT NULL
-    """)
-    sedes = cursor.fetchall()
+    # Convertir sedes a lista de diccionarios con tipos numéricos simples
+    sedes = [
+        {
+            'id_sede': s.id_sede,
+            'nombre_sede': s.nombre_sede,
+            'direccion': s.direccion,
+            'latitud': float(s.latitud) if s.latitud is not None else None,
+            'longitud': float(s.longitud) if s.longitud is not None else None,
+        }
+        for s in sedes_db
+    ]
 
-    # 2. Obtener rutas activas entre sedes
-    cursor.execute("""
-        SELECT 
-            r.id_ruta,
-            s1.nombre_sede AS origen,
-            s1.latitud AS latitud_origen,
-            s1.longitud AS longitud_origen,
-            s2.nombre_sede AS destino,
-            s2.latitud AS latitud_destino,
-            s2.longitud AS longitud_destino
-        FROM rutas r
-        INNER JOIN sedes s1 ON r.id_sede_origen = s1.id_sede
-        INNER JOIN sedes s2 ON r.id_sede_destino = s2.id_sede
-    """)
-    rutas = cursor.fetchall()
+    rutas_db = Ruta.query.filter_by(activa=True).all()
 
-    cursor.close()
-    conn.close()
+    # Construir lista de rutas con las coordenadas de las sedes de origen y destino
+    rutas = []
+    for r in rutas_db:
+        if r.origen and r.destino and r.origen.latitud and r.origen.longitud and r.destino.latitud and r.destino.longitud:
+            rutas.append({
+                'id_ruta': r.id_ruta,
+                'origen': r.origen.nombre_sede,
+                'latitud_origen': float(r.origen.latitud),
+                'longitud_origen': float(r.origen.longitud),
+                'destino': r.destino.nombre_sede,
+                'latitud_destino': float(r.destino.latitud),
+                'longitud_destino': float(r.destino.longitud),
+            })
 
     api_key = os.getenv('GOOGLE_MAPS_API_KEY', '')
 

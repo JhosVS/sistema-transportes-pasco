@@ -1,0 +1,127 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Detalle de Encomienda{% endblock %}
+
+{% block content %}
+{% set colores = {'Registrado': 'secondary', 'En transito': 'primary', 'Entregado': 'success', 'Perdido': 'danger'} %}
+{% set ruta = e.viaje.horario.ruta %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="m-0 fw-bold">
+        <i class="bi bi-box-seam"></i> Encomienda E001-{{ "%06d"|format(e.id_detalle_encomienda) }}
+    </h4>
+    <a href="{{ url_for('encomiendas_admin.index') }}" class="btn btn-light border btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Volver al listado
+    </a>
+</div>
+
+<div class="row g-3">
+    <!-- Información -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold m-0">Datos del envío</h6>
+                    <span class="badge bg-{{ colores[e.estado_entrega] }} px-3 py-2">{{ e.estado_entrega }}</span>
+                </div>
+
+                <div class="row g-3 small">
+                    <div class="col-6">
+                        <div class="text-muted">Viaje</div>
+                        <div class="fw-bold">{{ ruta.origen.ciudad }} ➔ {{ ruta.destino.ciudad }}</div>
+                        <div class="text-muted">
+                            {{ e.viaje.fecha_salida.strftime('%d/%m/%Y') }} · {{ e.viaje.salida_programada.strftime('%H:%M') }} hrs
+                            · Viaje #{{ e.id_viaje }}
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Registrada</div>
+                        <div class="fw-bold">{{ e.reserva.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</div>
+                        <div class="text-muted text-capitalize">{{ e.reserva.metodo_pago }} · canal {{ e.reserva.canal_venta }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Remitente</div>
+                        <div class="fw-bold">{{ e.reserva.cliente.nombres_razon_social }}</div>
+                        <div class="text-muted">DNI {{ e.reserva.cliente.num_documento }} · Tel. {{ e.reserva.cliente.telefono or '-' }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Destinatario</div>
+                        <div class="fw-bold">{{ e.nombre_destinatario }}</div>
+                        <div class="text-muted">DNI {{ e.dni_destinatario }} · Tel. {{ e.telefono_destinatario }}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="text-muted">Contenido</div>
+                        <div>{{ e.descripcion_contenido }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted">Peso</div>
+                        <div class="fw-bold">{{ "%.2f"|format(e.peso_kg) }} kg</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted">Monto pagado</div>
+                        <div class="fw-bold text-success">S/ {{ "%.2f"|format(e.precio_pagado) }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted">Entregada el</div>
+                        <div class="fw-bold">{{ e.entregado_en.strftime('%d/%m/%Y %H:%M') if e.entregado_en else '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="col-lg-5">
+        {% if e.estado_entrega == 'Registrado' %}
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold">Cargar al bus</h6>
+                <p class="small text-muted">Marca la encomienda como en tránsito al subirla al vehículo.</p>
+                <form action="{{ url_for('encomiendas_admin.cambiar_estado', id_encomienda=e.id_detalle_encomienda) }}" method="POST">
+                    <input type="hidden" name="nuevo_estado" value="En transito">
+                    <input type="hidden" name="volver" value="detalle">
+                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-truck me-1"></i> Marcar en tránsito</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if e.estado_entrega == 'En transito' %}
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold">Registrar entrega</h6>
+                <p class="small text-muted">Pida al destinatario su DNI y la clave de recojo.</p>
+                <form action="{{ url_for('encomiendas_admin.entregar', id_encomienda=e.id_detalle_encomienda) }}" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold text-muted">DNI DEL DESTINATARIO</label>
+                        <input type="text" name="dni_destinatario" class="form-control" maxlength="8" required autocomplete="off">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">CLAVE DE RECOJO</label>
+                        <input type="text" name="clave_recojo" class="form-control text-uppercase" maxlength="10" required autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-check2-circle me-1"></i> Confirmar entrega</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if 'Perdido' in transiciones[e.estado_entrega] %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold text-danger">Reportar como perdida</h6>
+                <form action="{{ url_for('encomiendas_admin.cambiar_estado', id_encomienda=e.id_detalle_encomienda) }}"
+                      method="POST" onsubmit="return confirm('¿Marcar la encomienda como PERDIDA? Esta acción no se puede deshacer.');">
+                    <input type="hidden" name="nuevo_estado" value="Perdido">
+                    <input type="hidden" name="volver" value="detalle">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-exclamation-octagon me-1"></i> Marcar como perdida</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not transiciones[e.estado_entrega] %}
+        <div class="alert alert-secondary small mb-0">Esta encomienda está en un estado final; no admite más cambios.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

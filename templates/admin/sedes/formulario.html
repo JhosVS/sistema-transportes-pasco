@@ -3,7 +3,6 @@
 {% block title %}{{ 'Editar' if es_edicion else 'Nueva' }} Sede{% endblock %}
 
 {% block content %}
-<!-- Cabecera de Navegación Alineada -->
 <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
     <div>
         <nav aria-label="breadcrumb">
@@ -19,7 +18,6 @@
     </a>
 </div>
 
-<!-- Layout Principal Alineado en 2 Columnas -->
 <form action="{{ url_for('sedes.editar', id_sede=sede.id_sede) if es_edicion else url_for('sedes.crear') }}" method="POST">
     <div class="row g-4">
         
@@ -29,28 +27,59 @@
                 <h6 class="fw-bold text-uppercase text-muted fs-7 mb-3 border-bottom pb-2">Información de la Sede</h6>
                 
                 <div class="row g-3">
+                    <!-- NOMBRE -->
                     <div class="col-md-6">
                         <label class="form-label fw-semibold small">Nombre de la Sede <span class="text-danger">*</span></label>
-                        <input type="text" name="nombre_sede" value="{{ sede.nombre_sede if es_edicion else '' }}" class="form-control" placeholder="Ej. Agencia Central Pasco" required>
+                        <input type="text" name="nombre_sede" value="{{ sede.nombre_sede if es_edicion else '' }}" class="form-control" placeholder="Ej. Agencia Central Carhuamayo" required>
                     </div>
 
+                    <!-- DIRECCIÓN -->
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold small">Dirección Físíca <span class="text-danger">*</span></label>
-                        <input type="text" name="direccion" value="{{ sede.direccion if es_edicion else '' }}" class="form-control" placeholder="Ej. Av. Los Incas 450" required>
+                        <label class="form-label fw-semibold small">Dirección Física <span class="text-danger">*</span></label>
+                        <input type="text" name="direccion" value="{{ sede.direccion if es_edicion else '' }}" class="form-control" placeholder="Ej. Av. Mariscal Castilla S/N" required>
                     </div>
 
-                    <div class="col-md-6">
+                    <!-- CIUDAD -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Ciudad <span class="text-danger">*</span></label>
+                        <input type="text" name="ciudad" value="{{ sede.ciudad if es_edicion else '' }}" class="form-control" placeholder="Ej. Carhuamayo" required>
+                    </div>
+
+                    <!-- DEPARTAMENTO -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Departamento <span class="text-danger">*</span></label>
+                        <input type="text" name="departamento" value="{{ sede.departamento if es_edicion else '' }}" class="form-control" placeholder="Ej. Junín" required>
+                    </div>
+
+                    <!-- ALTITUD MSNM -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Altitud (m s. n. m.)</label>
+                        <input type="number" name="altitud_msnm" value="{{ sede.altitud_msnm if es_edicion and sede.altitud_msnm else '' }}" class="form-control" placeholder="Ej. 4100">
+                    </div>
+
+                    <!-- LATITUD -->
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold small">Latitud</label>
-                        <input type="text" name="latitud" value="{{ (sede.latitud or '') if es_edicion else '' }}" class="form-control font-monospace" placeholder="-10.6861">
+                        <input type="text" name="latitud" value="{{ (sede.latitud or '') if es_edicion else '' }}" class="form-control font-monospace" placeholder="-10.9161">
                     </div>
 
-                    <div class="col-md-6">
+                    <!-- LONGITUD -->
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold small">Longitud</label>
-                        <input type="text" name="longitud" value="{{ (sede.longitud or '') if es_edicion else '' }}" class="form-control font-monospace" placeholder="-76.2561">
+                        <input type="text" name="longitud" value="{{ (sede.longitud or '') if es_edicion else '' }}" class="form-control font-monospace" placeholder="-76.0428">
+                    </div>
+
+                    <!-- ESTADO -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Estado</label>
+                        <select name="activo" class="form-select">
+                            <option value="1" {% if not es_edicion or sede.activo %}selected{% endif %}>Activa</option>
+                            <option value="0" {% if es_edicion and not sede.activo %}selected{% endif %}>Inactiva</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Botones de Acción Inline -->
+                <!-- Botones de Acción -->
                 <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top">
                     <button type="submit" class="btn btn-warning text-white fw-semibold px-4">
                         <i class="bi bi-check-lg me-1"></i> {{ 'Actualizar Sede' if es_edicion else 'Guardar Sede' }}
@@ -60,18 +89,18 @@
             </div>
         </div>
 
-        <!-- Columna Secundaria: Panel Contextual de Ayuda -->
+        <!-- Columna Secundaria: Ayuda Contextual -->
         <div class="col-lg-4">
             <div class="bg-light p-4 rounded border text-muted">
                 <h6 class="fw-bold text-dark mb-2">
                     <i class="bi bi-info-circle text-warning me-1"></i> Consideraciones
                 </h6>
                 <p class="small mb-2">
-                    Las <strong>sedes</strong> representan los puntos de origen, escala o destino para la venta de pasajes y despacho de buses.
+                    Las <strong>sedes</strong> representan los puntos de origen o destino para la venta de pasajes y itinerarios de viaje.
                 </p>
                 <ul class="small ps-3 mb-0">
-                    <li class="mb-1">El nombre debe ser reconocible por el cliente.</li>
-                    <li class="mb-1">Las coordenadas son opcionales pero recomendadas para el geolocalizador.</li>
+                    <li class="mb-1"><strong>Altitud (m s. n. m.)</strong>: Utilizada por los modelos de Machine Learning para predecir el desgaste del vehículo y rendimiento de combustible.</li>
+                    <li class="mb-1"><strong>Geolocalización</strong>: Coordenadas opcionales recomendadas para mapeo y cálculo dinámico de itinerarios.</li>
                 </ul>
             </div>
         </div>

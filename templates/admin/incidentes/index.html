@@ -1,5 +1,4 @@
 {% extends 'admin/base_admin.html' %}
-
 {% block title %}Incidentes en Ruta{% endblock %}
 
 {% block content %}
@@ -17,12 +16,12 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light small text-uppercase text-muted">
+                    <thead class="table-dark-custom small text-uppercase">
                         <tr>
                             <th>Fecha/Hora Reporte</th>
                             <th>Viaje / Ruta</th>
                             <th>Bus / Conductor</th>
-                            <th>Tipo</th>
+                            <th>Tipo Incidente</th>
                             <th>Lugar</th>
                             <th>Retraso Est.</th>
                             <th>Descripción</th>
@@ -30,22 +29,49 @@
                     </thead>
                     <tbody class="small">
                         {% for i in incidentes %}
+                        {% set v = i.viaje %}
+                        {% set vehiculo_obj = v.vehiculo_efectivo if v else None %}
+                        {% set conductor_obj = v.conductor or (v.horario.conductor_default if v and v.horario else None) %}
                         <tr>
-                            <td class="fw-semibold">{{ i.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-                            <td>
-                                <div class="fw-bold text-dark">{{ i.origen }} ➔ {{ i.destino }}</div>
-                                <div class="text-muted small">{{ i.fecha_salida.strftime('%d/%m/%Y') }} - {{ i.hora_salida }} hrs</div>
+                            <td class="fw-semibold font-monospace">
+                                {{ i.fecha_hora.strftime('%d/%m/%Y %H:%M') if i.fecha_hora else '-' }}
                             </td>
+
                             <td>
-                                <div>{{ i.marca }} ({{ i.placa }})</div>
-                                <div class="text-muted small">{{ i.conductor_nombre }} {{ i.conductor_apellido }}</div>
+                                {% if v and v.horario and v.horario.ruta %}
+                                    <div class="fw-bold text-dark">
+                                        {{ v.horario.ruta.origen.ciudad }} ➔ {{ v.horario.ruta.destino.ciudad }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ v.fecha_salida.strftime('%d/%m/%Y') }} - {{ v.salida_programada.strftime('%H:%M') }} hrs
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Viaje #{{ i.id_viaje }}</span>
+                                {% endif %}
                             </td>
+
                             <td>
-                                <span class="badge bg-warning-subtle text-dark border border-warning">
-                                    {{ i.tipo_incidente }}
+                                {% if vehiculo_obj %}
+                                    <div><code>{{ vehiculo_obj.placa }}</code> <small class="text-muted">({{ vehiculo_obj.marca }})</small></div>
+                                {% else %}
+                                    <div class="text-muted small">Sin bus asignado</div>
+                                {% endif %}
+
+                                {% if conductor_obj %}
+                                    <div class="text-muted small">{{ conductor_obj.nombre_completo }}</div>
+                                {% else %}
+                                    <div class="text-muted small">Sin conductor</div>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-warning text-dark border border-warning">
+                                    {{ labels.get(i.tipo_incidente, i.tipo_incidente) }}
                                 </span>
                             </td>
+
                             <td>{{ i.lugar_referencial }}</td>
+
                             <td>
                                 {% if i.minutos_retraso_estimado > 0 %}
                                     <span class="text-danger fw-bold">+{{ i.minutos_retraso_estimado }} min</span>
@@ -53,6 +79,7 @@
                                     <span class="text-muted">Sin retraso</span>
                                 {% endif %}
                             </td>
+
                             <td class="text-muted" style="max-width: 250px;">{{ i.descripcion }}</td>
                         </tr>
                         {% else %}

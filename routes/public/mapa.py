@@ -1,18 +1,27 @@
-# routes/public/mapa.py
 from flask import Blueprint, render_template
-from database.db import get_connection
+from models import Sede
 
 mapa_bp = Blueprint('mapa', __name__)
 
+
 @mapa_bp.route('/mapa')
 def ver_mapa():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    sedes_db = Sede.query.filter(
+        Sede.latitud.isnot(None),
+        Sede.longitud.isnot(None),
+        Sede.activo == True
+    ).all()
 
-    cursor.execute("SELECT id_sede, nombre_sede, direccion, latitud, longitud FROM sedes WHERE latitud IS NOT NULL AND longitud IS NOT NULL")
-    sedes = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
+    # Convertir a lista de diccionarios para compatibilidad con el filtro `tojson` de Jinja2
+    sedes = [
+        {
+            'id_sede': s.id_sede,
+            'nombre_sede': s.nombre_sede,
+            'direccion': s.direccion,
+            'latitud': float(s.latitud) if s.latitud is not None else None,
+            'longitud': float(s.longitud) if s.longitud is not None else None,
+        }
+        for s in sedes_db
+    ]
 
     return render_template('public/mapa.html', sedes=sedes)

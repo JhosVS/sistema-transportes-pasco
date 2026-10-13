@@ -1,0 +1,129 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}{{ 'Editar' if carga else 'Nueva' }} Carga de Combustible{% endblock %}
+
+{% block content %}
+{# Valor del campo: lo reenviado por el formulario, o el del registro al editar, o vacío #}
+{% macro val(campo) -%}
+    {%- if form and form.get(campo) -%}{{ form.get(campo) }}
+    {%- elif carga and carga[campo] is not none -%}{{ carga[campo] }}
+    {%- endif -%}
+{%- endmacro %}
+
+<div class="container py-4" style="max-width: 700px;">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-fuel-pump text-warning me-2"></i>{{ 'Editar' if carga else 'Registrar' }} Carga de Combustible
+            </h5>
+
+            <form method="POST">
+                {% set sel_veh = (form.get('id_vehiculo') if form and form.get('id_vehiculo') else (carga.id_vehiculo if carga else '')) | string %}
+                {% set sel_viaje = (form.get('id_viaje') if form and form.get('id_vehiculo') else (carga.id_viaje if carga and carga.id_viaje else '')) | string %}
+
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">VIAJE<span class="text-danger">*</span></label>
+                    <select name="id_viaje" class="form-select" required>
+                        <option value="">-- Sin viaje asociado --</option>
+                        {% for via in viajes %}
+                        <option value="{{ via.id_viaje }}"
+                                data-vehiculo="{{ via.vehiculo_efectivo.id_vehiculo if via.vehiculo_efectivo else '' }}"
+                                {% if sel_viaje == via.id_viaje|string %}selected{% endif %}>
+                            #{{ via.id_viaje }} · {{ via.fecha_salida.strftime('%d/%m/%Y') }} {{ via.salida_programada.strftime('%H:%M') }}
+                            · {{ via.horario.ruta.origen.ciudad }} ➔ {{ via.horario.ruta.destino.ciudad }}
+                            [{{ via.vehiculo_efectivo.placa if via.vehiculo_efectivo else 'Sin bus' }}]
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Se muestran solo los viajes del vehículo elegido. Si elige un viaje, el vehículo se completa solo.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">VEHÍCULO</label>
+                    <select name="id_vehiculo" class="form-select" disabled>
+                        <option value="">-- Seleccione --</option>
+                        {% for veh in vehiculos %}
+                        <option value="{{ veh.id_vehiculo }}" {% if sel_veh == veh.id_vehiculo|string %}selected{% endif %}>
+                            {{ veh.placa }} — {{ veh.marca }} {{ veh.modelo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">FECHA Y HORA <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="fecha" class="form-control" max="{{ ahora }}" required
+                               value="{{ form.get('fecha') if form and form.get('fecha') else (carga.fecha.strftime('%Y-%m-%dT%H:%M') if carga else ahora) }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">ODÓMETRO (KM) <span class="text-danger">*</span></label>
+                        <input type="number" name="km_odometro" class="form-control" min="0" required value="{{ val('km_odometro') }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">GALONES <span class="text-danger">*</span></label>
+                        <input type="number" id="galones" name="galones" class="form-control" min="0.01" step="0.01" required value="{{ val('galones') }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">COSTO TOTAL (S/) <span class="text-danger">*</span></label>
+                        <input type="number" id="costo_total" name="costo_total" class="form-control" min="0.01" step="0.01" required value="{{ val('costo_total') }}">
+                    </div>
+                </div>
+
+                <div class="small text-muted mb-3">Precio por galón: <strong id="precio_galon">-</strong></div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <a href="{{ url_for('combustible.index') }}" class="btn btn-light border btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark px-4">
+                        <i class="bi bi-check-lg me-1"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const galones = document.getElementById('galones');
+const costo = document.getElementById('costo_total');
+function actualizarPrecio() {
+    const g = parseFloat(galones.value), c = parseFloat(costo.value);
+    document.getElementById('precio_galon').textContent =
+        (g > 0 && c > 0) ? 'S/ ' + (c / g).toFixed(2) : '-';
+}
+galones.addEventListener('input', actualizarPrecio);
+costo.addEventListener('input', actualizarPrecio);
+actualizarPrecio();
+
+// --- Viaje y vehículo siempre coherentes ---
+const selVeh = document.querySelector('select[name="id_vehiculo"]');
+const selViaje = document.querySelector('select[name="id_viaje"]');
+
+function filtrarViajes() {
+    const veh = selVeh.value;
+    Array.from(selViaje.options).forEach(opt => {
+        if (!opt.value) return;
+        const ok = !veh || opt.dataset.vehiculo === veh;
+        opt.hidden = !ok;
+        opt.disabled = !ok;
+    });
+    const actual = selViaje.selectedOptions[0];
+    if (actual && actual.disabled) selViaje.value = '';
+}
+
+selVeh.addEventListener('change', filtrarViajes);
+selViaje.addEventListener('change', () => {
+    const opt = selViaje.selectedOptions[0];
+    if (opt && opt.dataset.vehiculo) {
+        selVeh.value = opt.dataset.vehiculo;
+        filtrarViajes();
+    }
+});
+filtrarViajes();
+</script>
+{% endblock %}

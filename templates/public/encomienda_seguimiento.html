@@ -1,0 +1,52 @@
+{% extends 'public/base_public.html' %}
+
+{% block title %}Rastrear Encomienda{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 650px;">
+
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-1"><i class="bi bi-box-seam text-warning me-2"></i>Rastrear Encomienda</h5>
+            <p class="text-muted small mb-3">Ingrese el DNI del destinatario y la clave de recojo.</p>
+
+            <form method="POST" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small fw-semibold text-muted">DNI DESTINATARIO</label>
+                    <input type="text" name="dni_destinatario" class="form-control" maxlength="8"
+                           pattern="[0-9]{8}" required value="{{ dni }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-muted">CLAVE DE RECOJO</label>
+                    <input type="text" name="clave_recojo" class="form-control text-uppercase" maxlength="10"
+                           required value="{{ clave }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Consultar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if resultados %}
+        {% set colores = {'Registrado': 'secondary', 'En transito': 'primary', 'Entregado': 'success', 'Perdido': 'danger'} %}
+        {% for r in resultados %}
+        <div class="card border-0 shadow-sm rounded-3 mb-3">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-dark">{{ r.origen }} ➔ {{ r.destino }}</span>
+                    <span class="badge bg-{{ colores.get(r.estado, 'secondary') }} px-3 py-2">{{ r.estado }}</span>
+                </div>
+                <div class="small text-muted">
+                    Salida: {{ r.fecha_salida.strftime('%d/%m/%Y') if r.fecha_salida.strftime else r.fecha_salida }} - {{ r.hora_salida }} hrs
+                </div>
+                <div class="small text-muted">Destinatario: {{ r.nombre_destinatario }} · Peso: {{ "%.2f"|format(r.peso_kg) }} kg</div>
+                {% if r.estado == 'Entregado' and r.entregado_en %}
+                    <div class="small text-success mt-1">Entregado el {{ r.entregado_en.strftime('%d/%m/%Y %H:%M') }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

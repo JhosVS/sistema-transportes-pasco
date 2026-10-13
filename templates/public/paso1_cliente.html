@@ -6,14 +6,15 @@
 <div class="container py-4" style="max-width: 650px;">
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-1">Paso 1: Datos del Comprador</h5>
-            <p class="text-muted small mb-4">Ingrese su DNI para autocompletar sus datos con RENIEC.</p>
+            <h5 class="fw-bold text-dark mb-1">{{ titulo_paso|default('Paso 1: Datos del Comprador') }}</h5>
+            <p class="text-muted small mb-4">Ingrese su DNI para consultar sus datos con RENIEC.</p>
 
             <form method="POST">
+                <!-- DNI / CONSULTA RENIEC -->
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold text-muted">DNI / DOCUMENTO</label>
+                    <label class="form-label small fw-semibold text-muted">DNI / DOCUMENTO <span class="text-danger">*</span></label>
                     <div class="input-group">
-                        <input type="text" id="num_documento" name="num_documento" class="form-control" maxlength="8" placeholder="Ingrese 8 dígitos" required autocomplete="off">
+                        <input type="text" id="num_documento" name="num_documento" class="form-control" maxlength="8" pattern="[0-9]{8}" placeholder="Ingrese 8 dígitos" required autocomplete="off">
                         <button class="btn btn-outline-secondary" type="button" id="btn_consultar">
                             <i class="bi bi-search"></i> Consultar
                         </button>
@@ -21,16 +22,37 @@
                     <div id="dni_status" class="small mt-1"></div>
                 </div>
 
+                <!-- NOMBRES Y APELLIDOS -->
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold text-muted">NOMBRES Y APELLIDOS</label>
-                    <input type="text" id="nombres_razon_social" name="nombres_razon_social" class="form-control" required placeholder="Nombre completo">
+                    <label class="form-label small fw-semibold text-muted">NOMBRES Y APELLIDOS <span class="text-danger">*</span></label>
+                    <input type="text" id="nombres_razon_social" name="nombres_razon_social" class="form-control" required placeholder="Nombre completo del comprador">
                 </div>
 
+                <!-- FECHA NACIMIENTO Y SEXO -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label small fw-semibold text-muted">TELÉFONO / CELULAR</label>
-                        <input type="tel" name="telefono" class="form-control" placeholder="987654321" required>
+                        <label class="form-label small fw-semibold text-muted">FECHA DE NACIMIENTO <span class="text-danger">*</span></label>
+                        <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control" required>
                     </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">SEXO / GÉNERO <span class="text-danger">*</span></label>
+                        <select id="sexo" name="sexo" class="form-select" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="M">Masculino (M)</option>
+                            <option value="F">Femenino (F)</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TELÉFONO Y CORREO -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-semibold text-muted">TELÉFONO / CELULAR <span class="text-danger">*</span></label>
+                        <input type="tel" name="telefono" class="form-control" placeholder="Ej. 987654321" required>
+                    </div>
+
                     <div class="col-md-6 mb-3">
                         <label class="form-label small fw-semibold text-muted">CORREO ELECTRÓNICO</label>
                         <input type="email" name="email" class="form-control" placeholder="correo@ejemplo.com">
@@ -42,7 +64,7 @@
                         <i class="bi bi-arrow-left me-1"></i> Cancelar
                     </a>
                     <button type="submit" class="btn btn-warning fw-bold text-dark px-4">
-                        Continuar a Asientos <i class="bi bi-arrow-right ms-1"></i>
+                        {{ texto_boton|default('Continuar a Asientos') }} <i class="bi bi-arrow-right ms-1"></i>
                     </button>
                 </div>
             </form>
@@ -61,6 +83,8 @@ function consultarRENIEC() {
     const dni = dniInput.value.trim();
     const statusText = document.getElementById('dni_status');
     const inputNombre = document.getElementById('nombres_razon_social');
+    const inputFechaNac = document.getElementById('fecha_nacimiento');
+    const selectSexo = document.getElementById('sexo');
 
     if (dni.length !== 8) return;
 
@@ -71,16 +95,18 @@ function consultarRENIEC() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                inputNombre.value = data.nombres_completos;
+                if (data.nombres_completos) inputNombre.value = data.nombres_completos;
+                if (data.fecha_nacimiento) inputFechaNac.value = data.fecha_nacimiento;
+                if (data.sexo) selectSexo.value = data.sexo;
                 statusText.textContent = '✓ Verificado por RENIEC';
                 statusText.className = 'small text-success mt-1 fw-semibold';
             } else {
-                statusText.textContent = 'No se encontró en RENIEC. Ingrese los nombres manualmente.';
+                statusText.textContent = 'No se encontró en RENIEC. Ingrese los datos manualmente.';
                 statusText.className = 'small text-warning mt-1';
             }
         })
         .catch(() => {
-            statusText.textContent = 'Servicio no disponible. Complete manualmente.';
+            statusText.textContent = 'Servicio de consulta no disponible. Ingrese manualmente.';
             statusText.className = 'small text-secondary mt-1';
         });
 }
