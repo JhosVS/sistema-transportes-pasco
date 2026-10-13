@@ -76,12 +76,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('combustible.') %}active{% endif %}"
-                        href="{{ url_for('combustible.index') }}">
-                        <i class="bi bi-fuel-pump me-2"></i> <span>Combustible</span>
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link {% if request.endpoint and request.endpoint.startswith('incidentes.') %}active{% endif %}"
                         href="{{ url_for('incidentes.listar_incidentes') }}">
                         <i class="bi bi-exclamation-triangle me-2"></i> <span>Incidentes</span>

@@ -1,106 +1,205 @@
 # routes/admin/predicciones.py
-import os
 import json
+import os
+from collections import Counter
+from datetime import date, datetime, timedelta
+import threading
+from sqlalchemy import text
+from models import db
+
 import joblib
 import pandas as pd
-from flask import Blueprint, render_template
-from models import db, ProgramacionViaje
+from flask import Blueprint, jsonify, render_template, request
+
+from models import Horario, ProgramacionViaje, Ruta
+from routes.utils.feriados import es_feriado_peru
 
 predicciones_bp = Blueprint('predicciones', __name__, url_prefix='/admin/predicciones')
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
-MODEL_PATH = os.path.join(BASE_DIR, 'modelo_demanda.joblib')
+ML_DIR = os.path.join(BASE_DIR, 'ml', 'modelos')
+MODEL_PATH = os.path.join(ML_DIR, 'modelo_ocupacion.joblib')
+METRICAS_PATH = os.path.join(ML_DIR, 'metricas.json')
 
-modelo = None
-if os.path.exists(MODEL_PATH):
-    try:
-        modelo = joblib.load(MODEL_PATH)
-    except Exception as e:
-        print(f"Error al cargar modelo: {e}")
+CLIMAS = ['despejado', 'neblina', 'lluvia', 'granizo']
+_cache = {'mtime': None, 'modelo': None, 'metricas': None}
+
+HIST_PATH = os.path.join(ML_DIR, 'historial.json')
+_lock = threading.Lock()
 
 
+def _historial():
+    if os.path.exists(HIST_PATH):
+        with open(HIST_PATH, encoding='utf-8') as f:
+            return json.load(f)
+    return []
+
+
+def _total_viajes_base():
+    return db.session.execute(text("SELECT COUNT(*) FROM v_dataset_ocupacion")).scalar() or 0
+
+
+# ---------------------------------------------------------------------
+# Carga del modelo (se recarga sola si vuelves a entrenar)
+# ---------------------------------------------------------------------
+def _cargar():
+    if not (os.path.exists(MODEL_PATH) and os.path.exists(METRICAS_PATH)):
+        return None, None
+    mtime = os.path.getmtime(MODEL_PATH)
+    if _cache['mtime'] != mtime:
+        _cache['modelo'] = joblib.load(MODEL_PATH)
+        with open(METRICAS_PATH, encoding='utf-8') as f:
+            _cache['metricas'] = json.load(f)
+        _cache['mtime'] = mtime
+    return _cache['modelo'], _cache['metricas']
+
+
+def _capacidad_ruta(id_ruta):
+    """Capacidad más común de los buses asignados a los horarios de la ruta."""
+    caps = [h.vehiculo_default.capacidad_asientos
+            for h in Horario.query.filter_by(id_ruta=id_ruta).all()
+            if h.vehiculo_default]
+    return Counter(caps).most_common(1)[0][0] if caps else 40
+
+
+def _fila(ruta, fecha, hora_dec, clima, capacidad, precio=None):
+    """Arma las variables que el modelo espera (mismas que en el entrenamiento)."""
+    fer = es_feriado_peru(fecha)
+    vis = es_feriado_peru(fecha + timedelta(days=1))
+    if precio is None:
+        precio = round(float(ruta.precio_base) * (1.10 if (fer or vis) else 1.0) * 2) / 2
+    return {
+        'dia_semana_num': fecha.weekday(),
+        'mes': fecha.month,
+        'dia_mes': fecha.day,
+        'es_fin_semana': int(fecha.weekday() in (4, 5, 6)),
+        'es_feriado': int(fer),
+        'es_vispera': int(vis),
+        'id_ruta': ruta.id_ruta,
+        'id_sede_origen': ruta.id_sede_origen,
+        'id_sede_destino': ruta.id_sede_destino,
+        'distancia_km': float(ruta.distancia_km),
+        'hora_salida_decimal': float(hora_dec),
+        'precio_pasaje': float(precio),
+        'capacidad_asientos': int(capacidad),
+        'clima': clima if clima in CLIMAS else 'despejado',
+    }
+
+
+def _probabilidades(modelo, filas):
+    df = pd.DataFrame(filas)[modelo['features']]
+    return modelo['pipeline'].predict_proba(df)[:, 1]
+
+
+def _nombre_ruta(r):
+    o = r.origen.nombre_sede if r.origen else '?'
+    d = r.destino.nombre_sede if r.destino else '?'
+    return f"{o} → {d}"
+
+
+# ---------------------------------------------------------------------
+# Página principal
+# ---------------------------------------------------------------------
 @predicciones_bp.route('/')
 def dashboard_predicciones():
+    modelo, metricas = _cargar()
     if not modelo:
-        return "El archivo modelo_demanda.joblib no se encuentra en la raíz del proyecto.", 500
+        return render_template('admin/predicciones.html', metricas=None, rutas=[], proximos=[],
+                               climas=CLIMAS, historial=[], nuevos=0, total_actual=0)
 
+    rutas = [{'id': r.id_ruta, 'nombre': _nombre_ruta(r),
+              'precio': float(r.precio_base), 'capacidad': _capacidad_ruta(r.id_ruta)}
+             for r in Ruta.query.filter_by(activa=True).order_by(Ruta.id_ruta).all()]
+
+    hoy = date.today()
+    viajes = (ProgramacionViaje.query
+              .filter(ProgramacionViaje.estado_viaje == 'Programado',
+                      ProgramacionViaje.fecha_salida >= hoy,
+                      ProgramacionViaje.fecha_salida <= hoy + timedelta(days=14))
+              .order_by(ProgramacionViaje.salida_programada).limit(25).all())
+
+    filas, info = [], []
+    for v in viajes:
+        h = v.horario
+        veh = v.vehiculo_efectivo
+        if not (h and h.ruta and veh):
+            continue
+        hs = v.salida_programada
+        filas.append(_fila(h.ruta, v.fecha_salida, hs.hour + hs.minute / 60,
+                           v.clima or 'despejado', veh.capacidad_asientos, float(v.precio_pasaje)))
+        info.append({'fecha': v.fecha_salida, 'hora': hs.strftime('%H:%M'),
+                     'ruta': _nombre_ruta(h.ruta), 'placa': veh.placa,
+                     'capacidad': veh.capacidad_asientos})
+
+    proximos = []
+    if filas:
+        for d, p in zip(info, _probabilidades(modelo, filas)):
+            d['prob'] = round(float(p) * 100, 1)
+            proximos.append(d)
+
+    total_actual = _total_viajes_base()
+    nuevos = max(0, total_actual - metricas['filas']['total'])
+
+    return render_template('admin/predicciones.html', metricas=metricas, rutas=rutas,
+                           proximos=proximos, climas=CLIMAS, historial=_historial(),
+                           nuevos=nuevos, total_actual=total_actual)
+
+
+# ---------------------------------------------------------------------
+# Predicción puntual (la llama el formulario con fetch)
+# ---------------------------------------------------------------------
+@predicciones_bp.route('/predecir', methods=['POST'])
+def predecir():
+    modelo, _ = _cargar()
+    if not modelo:
+        return jsonify(error='Modelo no entrenado. Ejecuta ml/entrenar_modelo.py'), 400
+
+    datos = request.get_json(silent=True) or {}
     try:
-        viajes = ProgramacionViaje.query.limit(200).all()
+        ruta = Ruta.query.get(int(datos['id_ruta']))
+        fecha = datetime.strptime(datos['fecha'], '%Y-%m-%d').date()
+        hh, mm = [int(x) for x in datos['hora'].split(':')[:2]]
+        umbral = float(datos.get('umbral', 0.5))
+    except (KeyError, ValueError, TypeError):
+        return jsonify(error='Datos incompletos o con formato inválido.'), 400
+    if not ruta:
+        return jsonify(error='La ruta no existe.'), 404
 
-        rutas_semana = {}
-        conteo_rutas_semana = {}
+    clima = datos.get('clima', 'despejado')
+    capacidad = _capacidad_ruta(ruta.id_ruta)
+    fila = _fila(ruta, fecha, hh + mm / 60, clima, capacidad)
+    prob = float(_probabilidades(modelo, [fila])[0])
 
-        total_estimado = 0
-        total_capacidad = 0
+    if prob >= 0.70:
+        recomendacion = 'Demanda muy alta: considera un bus extra o ajustar el precio.'
+    elif prob >= umbral:
+        recomendacion = 'Se espera un viaje bastante lleno: vigila la venta de pasajes.'
+    elif prob >= 0.30:
+        recomendacion = 'Ocupación intermedia: operación normal.'
+    else:
+        recomendacion = 'Demanda baja: una promoción podría ayudar a llenar asientos.'
 
-        for v in viajes:
-            fecha = v.fecha_salida
-            horario = v.horario
-            ruta = horario.ruta if horario else None
-            vehiculo = v.vehiculo or (horario.vehiculo_default if horario else None)
+    return jsonify(
+        probabilidad=round(prob * 100, 1),
+        alta=bool(prob >= umbral),
+        umbral=umbral,
+        capacidad=capacidad,
+        precio=fila['precio_pasaje'],
+        es_feriado=bool(fila['es_feriado']),
+        es_vispera=bool(fila['es_vispera']),
+        recomendacion=recomendacion,
+    )
 
-            if not (horario and ruta and vehiculo):
-                continue
-
-            dia_semana_num = fecha.weekday()  # 0 (Lunes) a 6 (Domingo)
-            mes = fecha.month
-            dia_mes = fecha.day
-            es_fin_semana = 1 if dia_semana_num in (4, 5, 6) else 0
-
-            hora_salida = horario.hora_salida
-            hora_salida_decimal = hora_salida.hour + hora_salida.minute / 60.0 + hora_salida.second / 3600.0 if hora_salida else 0.0
-
-            capacidad_asientos = vehiculo.capacidad_asientos or 40
-            precio_base = float(horario.precio_pasaje_base or 0.0)
-
-            df_input = pd.DataFrame([{
-                'dia_semana_num': int(dia_semana_num),
-                'mes': int(mes),
-                'dia_mes': int(dia_mes),
-                'es_fin_semana': int(es_fin_semana),
-                'id_ruta': int(ruta.id_ruta),
-                'id_sede_origen': int(ruta.id_sede_origen),
-                'id_sede_destino': int(ruta.id_sede_destino),
-                'hora_salida_decimal': float(hora_salida_decimal),
-                'precio_pasaje_base': float(precio_base),
-                'capacidad_asientos': int(capacidad_asientos)
-            }])
-
-            prediccion_raw = modelo.predict(df_input)[0]
-            pasajes_est = max(0, min(capacidad_asientos, int(round(prediccion_raw))))
-            pct_ocupacion = round((pasajes_est / capacidad_asientos) * 100, 1)
-
-            total_estimado += pasajes_est
-            total_capacidad += capacidad_asientos
-
-            origen_nombre = ruta.origen.nombre_sede if ruta.origen else "Origen"
-            destino_nombre = ruta.destino.nombre_sede if ruta.destino else "Destino"
-            nombre_ruta = f"{origen_nombre} ➔ {destino_nombre}"
-
-            if nombre_ruta not in rutas_semana:
-                rutas_semana[nombre_ruta] = [0] * 7
-                conteo_rutas_semana[nombre_ruta] = [0] * 7
-
-            rutas_semana[nombre_ruta][dia_semana_num] += pct_ocupacion
-            conteo_rutas_semana[nombre_ruta][dia_semana_num] += 1
-
-        # Promediar porcentajes por día
-        datos_grafico = {}
-        for ruta_nombre, acumulado in rutas_semana.items():
-            datos_grafico[ruta_nombre] = []
-            for i in range(7):
-                cant = conteo_rutas_semana[ruta_nombre][i]
-                prom = round(acumulado[i] / cant, 1) if cant > 0 else 0
-                datos_grafico[ruta_nombre].append(prom)
-
-        promedio_global = round((total_estimado / total_capacidad * 100), 1) if total_capacidad > 0 else 0
-
-        return render_template(
-            'admin/predicciones.html',
-            datos_grafico_json=json.dumps(datos_grafico),
-            promedio_ocupacion=promedio_global,
-            total_viajes=len(viajes)
-        )
-
+@predicciones_bp.route('/reentrenar', methods=['POST'])
+def reentrenar():
+    if not _lock.acquire(blocking=False):
+        return jsonify(error='Ya hay un entrenamiento en curso.'), 409
+    try:
+        from ml.entrenar_modelo import entrenar
+        registro = entrenar()
+        _cache['mtime'] = None          # fuerza a recargar el modelo
+        return jsonify(registro)
     except Exception as e:
-        return f"Error interno: {e}", 500
+        return jsonify(error=f'Falló el entrenamiento: {e}'), 500
+    finally:
+        _lock.release()

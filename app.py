@@ -20,7 +20,6 @@ from routes.admin.predicciones import predicciones_bp
 from routes.public.encomiendas import encomiendas_bp
 from routes.admin.encomiendas import encomiendas_admin_bp
 from routes.admin.mantenimientos import mantenimientos_bp
-from routes.admin.combustible import combustible_bp
 from routes.admin.programacion import programacion_bp
 
 app = Flask(__name__)
@@ -48,7 +47,6 @@ app.register_blueprint(predicciones_bp)
 app.register_blueprint(encomiendas_bp)
 app.register_blueprint(encomiendas_admin_bp)
 app.register_blueprint(mantenimientos_bp)
-app.register_blueprint(combustible_bp)
 app.register_blueprint(programacion_bp)
 
 # Proteger rutas administrativas

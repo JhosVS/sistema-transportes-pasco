@@ -408,22 +408,6 @@ class Mantenimiento(db.Model):
 
     vehiculo = db.relationship("Vehiculo")
 
-
-class Combustible(db.Model):
-    __tablename__ = "combustible"
-
-    id_carga = db.Column(db.Integer, primary_key=True)
-    id_vehiculo = db.Column(db.Integer, db.ForeignKey("vehiculo.id_vehiculo"), nullable=False)
-    id_viaje = db.Column(db.Integer, db.ForeignKey("programacion_viaje.id_viaje"))
-    fecha = db.Column(db.DateTime, nullable=False)
-    galones = db.Column(db.Numeric(7, 2), nullable=False)
-    costo_total = db.Column(db.Numeric(8, 2), nullable=False)
-    km_odometro = db.Column(db.Integer, nullable=False)
-
-    vehiculo = db.relationship("Vehiculo")
-    viaje = db.relationship("ProgramacionViaje")
-
-
 # =====================================================================
 # 6. VISTAS (solo lectura) - útiles para ML y reportes
 # =====================================================================

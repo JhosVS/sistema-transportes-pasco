@@ -1,0 +1,14 @@
+[
+  {
+    "fecha": "2026-10-13T15:13:27",
+    "modelo": "GradientBoosting",
+    "filas": 2587,
+    "prueba": 389,
+    "auc": 0.9261,
+    "auc_anterior": 0.9261,
+    "accuracy": 0.8509,
+    "recall": 0.7177,
+    "f1": 0.7542,
+    "aceptado": true
+  }
+]
