@@ -298,14 +298,6 @@
     </div>
 </div>
 
-<div class="alert alert-secondary small">
-    <i class="bi bi-info-circle me-1"></i>
-    Datos de {{ metricas.periodo.desde }} a {{ metricas.periodo.hasta }}
-    ({{ metricas.filas.total }} viajes simulados; {{ (metricas.porcentaje_alta_ocupacion * 100)|round(1) }}% con alta
-    ocupación). Como la historia es simulada, el modelo recupera las reglas del simulador; no representa
-    todavía el comportamiento real del negocio.
-</div>
-
 <script>
 const M = {{ metricas|tojson }};
 const DISP = M.dispersion;
