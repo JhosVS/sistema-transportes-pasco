@@ -95,6 +95,13 @@
                         <span>Predicción de Demanda</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('asistente.') %}active{% endif %}"
+                    href="{{ url_for('asistente.index') }}">
+                        <i class="bi bi-stars me-2 text-warning"></i>
+                        <span>Asistente IA</span>
+                    </a>
+                </li>
             </ul>
 
             <div class="p-3 border-top border-secondary small text-white-50">

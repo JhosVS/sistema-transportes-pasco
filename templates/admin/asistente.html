@@ -1,0 +1,62 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Asistente IA{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <h3 class="fw-bold text-dark mb-1"><i class="bi bi-stars text-warning me-2"></i>Asistente IA</h3>
+    <p class="text-muted small mb-0">Pregunta sobre ventas, ocupación, flota, alertas o predicciones.
+        Máximo {{ limite }} preguntas por día.</p>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div id="chat" style="height:380px;overflow-y:auto" class="mb-3">
+            <div class="text-muted small">Ejemplos:</div>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                {% for e in ['¿Cuántos pasajeros hubo este mes?', '¿Qué ruta se llenó más en 30 días?',
+                             '¿Hay alertas de operación?', '¿Cuál es la probabilidad de que se llenen los próximos viajes?'] %}
+                <button class="btn btn-sm btn-outline-secondary ejemplo">{{ e }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        <form id="f" class="d-flex gap-2">
+            <input id="q" class="form-control" maxlength="{{ max_pregunta }}" placeholder="Escribe tu pregunta..." required>
+            <button id="b" class="btn btn-dark"><i class="bi bi-send text-warning"></i></button>
+        </form>
+    </div>
+</div>
+
+<script>
+const chat = document.getElementById('chat'), q = document.getElementById('q'), b = document.getElementById('b');
+
+function burbuja(texto, quien, pie) {
+    const d = document.createElement('div');
+    d.className = 'mb-3 d-flex ' + (quien === 'yo' ? 'justify-content-end' : '');
+    const c = document.createElement('div');
+    c.className = 'p-2 px-3 rounded-3 ' + (quien === 'yo' ? 'bg-warning' : (quien === 'err' ? 'bg-danger-subtle' : 'bg-light border'));
+    c.style.cssText = 'max-width:80%;white-space:pre-wrap';
+    c.textContent = texto;
+    if (pie) { const s = document.createElement('div'); s.className = 'text-muted'; s.style.fontSize = '.7rem'; s.textContent = pie; c.appendChild(s); }
+    d.appendChild(c); chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+    return d;
+}
+
+document.querySelectorAll('.ejemplo').forEach(e => e.onclick = () => { q.value = e.textContent; q.focus(); });
+
+document.getElementById('f').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const texto = q.value.trim(); if (!texto) return;
+    burbuja(texto, 'yo'); q.value = ''; b.disabled = true;
+    const espera = burbuja('Pensando...', 'bot');
+    try {
+        const r = await fetch("{{ url_for('asistente.preguntar') }}", {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pregunta: texto }) });
+        const d = await r.json(); espera.remove();
+        if (d.error) burbuja(d.error, 'err');
+        else burbuja(d.respuesta, 'bot', `${d.agente} · ${d.cache ? 'respuesta en caché' : d.tokens + ' tokens'}`);
+    } catch (e) { espera.remove(); burbuja('No se pudo conectar con el servidor.', 'err'); }
+    b.disabled = false; q.focus();
+});
+</script>
+{% endblock %}
