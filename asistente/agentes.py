@@ -52,13 +52,17 @@ AGENTES = {
                      "bus extra", "demanda", "se llene"],
         "peso": 2,
     },
-    "operaciones": {
+        "operaciones": {
         "nombre": "Agente de operaciones",
-        "rol": "Revisas alertas: licencias por vencer, viajes sin conductor/vehículo y buses en mantenimiento.",
-        "herramientas": [h.alertas_operacion, h.estado_flota],
+        "rol": ("Revisas alertas y das recomendaciones. Para recomendaciones usa la herramienta "
+                "recomendaciones y presenta cada acción con su prioridad, el hallazgo y la acción "
+                "sugerida (puedes usar hasta 6 frases)."),
+        "herramientas": [h.recomendaciones, h.alertas_operacion, h.estado_flota],
         "palabras": ["alerta", "licencia", "venc", "mantenimiento", "sin conductor", "sin vehiculo",
-                     "problema", "pendiente"],
-        "peso": 2,
+                     "problema", "pendiente", "recomend", "sugier", "suger", "que hago", "deberia",
+                     "accion", "consejo", "que hacer",
+                     "que me recomiendas", "recomiendas", "hacer esta semana"],
+        "peso": 3,
     },
 }
 

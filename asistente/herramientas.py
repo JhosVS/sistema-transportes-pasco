@@ -179,3 +179,70 @@ def prediccion_ruta_top(fecha: str, hora: str = "20:00", clima: str = "despejado
         return {"error": "No hay datos de rutas."}
     p = predecir_viaje(int(top[0]["id_ruta"]), fecha, hora, clima)
     return {"ruta": top[0]["ruta"], "pasajeros_30_dias": int(top[0]["pas"]), **p}
+
+# ------------------------- RECOMENDACIONES -------------------------
+@segura
+def recomendaciones() -> dict:
+    """Devuelve acciones sugeridas para la operación de los próximos 7 días: buses en mantenimiento con
+    viajes asignados, viajes sin conductor o vehículo, licencias por vencer y viajes con demanda muy
+    alta o muy baja según el modelo predictivo. Úsala cuando pidan recomendaciones o qué hacer."""
+    acciones = []
+
+    # 1. Buses en mantenimiento que tienen viajes próximos
+    afectados = _q("""SELECT ve.placa, COUNT(*) n, MIN(pv.salida_programada) primero
+                      FROM programacion_viaje pv JOIN horarios h ON h.id_horario = pv.id_horario
+                      JOIN vehiculo ve ON ve.id_vehiculo = COALESCE(pv.id_vehiculo, h.id_vehiculo_default)
+                      WHERE pv.estado_viaje='Programado' AND ve.estado='Mantenimiento'
+                        AND pv.fecha_salida BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                      GROUP BY ve.placa""")
+    if afectados:
+        libres = [f"{v['placa']} ({v['capacidad_asientos']} asientos)" for v in
+                  _q("SELECT placa, capacidad_asientos FROM vehiculo WHERE estado='Disponible' LIMIT 5")]
+        for a in afectados:
+            acciones.append({
+                "prioridad": "alta", "tipo": "vehiculo",
+                "hallazgo": f"El bus {a['placa']} está en mantenimiento y tiene {a['n']} viaje(s) "
+                            f"próximo(s), el primero el {a['primero']:%d/%m %H:%M}.",
+                "recomendacion": "Reasignar esos viajes a otro bus. Disponibles: "
+                                 + (", ".join(libres) if libres else "ninguno, evaluar cancelar o alquilar.")})
+
+    # 2. Viajes sin conductor o vehículo
+    sin = _q("""SELECT COUNT(*) n FROM programacion_viaje pv JOIN horarios h ON h.id_horario = pv.id_horario
+                LEFT JOIN vehiculo ve ON ve.id_vehiculo = COALESCE(pv.id_vehiculo, h.id_vehiculo_default)
+                WHERE pv.estado_viaje='Programado'
+                  AND pv.fecha_salida BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                  AND (ve.id_vehiculo IS NULL
+                       OR COALESCE(pv.id_conductor, h.id_conductor_default) IS NULL)""")[0]["n"]
+    if sin:
+        acciones.append({"prioridad": "alta", "tipo": "personal",
+                         "hallazgo": f"{sin} viaje(s) próximo(s) sin conductor o vehículo asignado.",
+                         "recomendacion": "Asignar personal y unidad desde Viajes Programados."})
+
+    # 3. Licencias por vencer
+    for l in _q("""SELECT CONCAT(nombres,' ',apellidos) nombre, licencia_vence FROM conductor
+                   WHERE estado='Activo' AND licencia_vence <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+                   ORDER BY licencia_vence LIMIT 5"""):
+        acciones.append({"prioridad": "media", "tipo": "personal",
+                         "hallazgo": f"La licencia de {l['nombre']} vence el {l['licencia_vence']:%d/%m/%Y}.",
+                         "recomendacion": "Gestionar la renovación antes de esa fecha."})
+
+    # 4. Demanda prevista (modelo predictivo)
+    from routes.admin.dashboard import _prediccion
+    for v in _prediccion()["viajes"]:
+        p = v.get("prob")
+        if p is None:
+            continue
+        if p >= 70:
+            acciones.append({"prioridad": "media", "tipo": "demanda",
+                             "hallazgo": f"{v['ruta']} el {v['fecha']}: {p}% de probabilidad de alta ocupación.",
+                             "recomendacion": "Considerar un bus extra o revisar el precio."})
+        elif p <= 15:
+            acciones.append({"prioridad": "baja", "tipo": "demanda",
+                             "hallazgo": f"{v['ruta']} el {v['fecha']}: solo {p}% de probabilidad de alta ocupación.",
+                             "recomendacion": "Considerar una promoción para llenar asientos."})
+
+    orden = {"alta": 0, "media": 1, "baja": 2}
+    acciones.sort(key=lambda a: orden[a["prioridad"]])
+    if not acciones:
+        return {"mensaje": "Sin hallazgos: la operación de los próximos 7 días está en orden."}
+    return {"total": len(acciones), "acciones": acciones[:6]}

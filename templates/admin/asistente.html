@@ -2,27 +2,64 @@
 {% block title %}Asistente IA{% endblock %}
 
 {% block content %}
-<div class="mb-3">
-    <h3 class="fw-bold text-dark mb-1"><i class="bi bi-stars text-warning me-2"></i>Asistente IA</h3>
-    <p class="text-muted small mb-0">Pregunta sobre ventas, ocupación, flota, alertas o predicciones.
-        Máximo {{ limite }} preguntas por día.</p>
-</div>
+{% set grupos = {
+  'Datos': ['¿Cuántos pasajeros hubo en los últimos 30 días?',
+            '¿Qué ruta se llenó más en 30 días?',
+            '¿Cómo afecta el clima al retraso de los viajes?'],
+  'Predicción': ['¿Se llenará el bus a Lima el viernes a las 20:00?',
+                 '¿Cuál es la probabilidad de que se llenen los próximos viajes?',
+                 '¿Y a Tarma el martes a las 08:00?'],
+  'Operación': ['¿Hay alertas de operación?',
+                '¿Cuántos buses están en mantenimiento?',
+                '¿Hay licencias de conductor por vencer?'],
+  'Consejos': ['¿Qué me recomiendas hacer esta semana?',
+               '¿Hay algún bus con problemas y qué hago?',
+               '¿Qué viajes necesitan una promoción?']
+} %}
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        <div id="chat" style="height:380px;overflow-y:auto" class="mb-3">
-            <div class="text-muted small">Ejemplos:</div>
-            <div class="d-flex flex-wrap gap-2 mt-2">
-                {% for e in ['¿Cuántos pasajeros hubo este mes?', '¿Qué ruta se llenó más en 30 días?',
-                             '¿Hay alertas de operación?', '¿Cuál es la probabilidad de que se llenen los próximos viajes?'] %}
-                <button class="btn btn-sm btn-outline-secondary ejemplo">{{ e }}</button>
-                {% endfor %}
+<div class="mx-auto" style="max-width:820px">
+    <div class="mb-3">
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-stars text-warning me-2"></i>Asistente IA</h3>
+        <p class="text-muted small mb-0">Consulta ventas, predicciones y recomendaciones en lenguaje natural.</p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div id="chat" style="height:340px;overflow-y:auto" class="mb-3">
+                <div id="vacio" class="text-center text-muted mt-4">
+                    <i class="bi bi-chat-dots fs-2 d-block mb-2"></i>
+                    <div class="mb-3">¿Qué quieres saber?</div>
+
+                    <ul class="nav nav-pills justify-content-center gap-1 mb-3 small" id="tabs">
+                        {% for nombre in grupos %}
+                        <li class="nav-item">
+                            <button type="button" class="nav-link py-1 px-3 {{ 'active' if loop.first }}"
+                                    data-grupo="{{ loop.index0 }}">{{ nombre }}</button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    {% for nombre, ejemplos in grupos.items() %}
+                    <div class="grupo d-flex flex-column align-items-center gap-2 {{ '' if loop.first else 'd-none' }}"
+                         data-grupo="{{ loop.index0 }}">
+                        {% for e in ejemplos %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary ejemplo">{{ e }}</button>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <form id="f" class="d-flex gap-2">
+                <input id="q" class="form-control" maxlength="{{ max_pregunta }}"
+                       placeholder="Escribe tu pregunta..." required autocomplete="off">
+                <button id="b" class="btn btn-dark"><i class="bi bi-send text-warning"></i></button>
+            </form>
+            <div class="text-muted mt-2" style="font-size:.75rem">
+                Indica periodo, ruta u hora para mejores respuestas. Solo consulta datos, no modifica nada.
+                Máx. {{ limite }} preguntas por día.
             </div>
         </div>
-        <form id="f" class="d-flex gap-2">
-            <input id="q" class="form-control" maxlength="{{ max_pregunta }}" placeholder="Escribe tu pregunta..." required>
-            <button id="b" class="btn btn-dark"><i class="bi bi-send text-warning"></i></button>
-        </form>
     </div>
 </div>
 
@@ -30,6 +67,7 @@
 const chat = document.getElementById('chat'), q = document.getElementById('q'), b = document.getElementById('b');
 
 function burbuja(texto, quien, pie) {
+    const v = document.getElementById('vacio'); if (v) v.remove();
     const d = document.createElement('div');
     d.className = 'mb-3 d-flex ' + (quien === 'yo' ? 'justify-content-end' : '');
     const c = document.createElement('div');
@@ -41,11 +79,7 @@ function burbuja(texto, quien, pie) {
     return d;
 }
 
-document.querySelectorAll('.ejemplo').forEach(e => e.onclick = () => { q.value = e.textContent; q.focus(); });
-
-document.getElementById('f').addEventListener('submit', async ev => {
-    ev.preventDefault();
-    const texto = q.value.trim(); if (!texto) return;
+async function preguntar(texto) {
     burbuja(texto, 'yo'); q.value = ''; b.disabled = true;
     const espera = burbuja('Pensando...', 'bot');
     try {
@@ -57,6 +91,19 @@ document.getElementById('f').addEventListener('submit', async ev => {
         else burbuja(d.respuesta, 'bot', `${d.agente} · ${d.cache ? 'respuesta en caché' : d.tokens + ' tokens'}`);
     } catch (e) { espera.remove(); burbuja('No se pudo conectar con el servidor.', 'err'); }
     b.disabled = false; q.focus();
+}
+
+// Pestañas de ejemplos
+document.querySelectorAll('#tabs .nav-link').forEach(t => t.onclick = () => {
+    document.querySelectorAll('#tabs .nav-link').forEach(x => x.classList.toggle('active', x === t));
+    document.querySelectorAll('.grupo').forEach(g => g.classList.toggle('d-none', g.dataset.grupo !== t.dataset.grupo));
+});
+
+document.querySelectorAll('.ejemplo').forEach(e => e.onclick = () => { if (!b.disabled) preguntar(e.textContent.trim()); });
+
+document.getElementById('f').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const t = q.value.trim(); if (t) preguntar(t);
 });
 </script>
 {% endblock %}
