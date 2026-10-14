@@ -27,8 +27,23 @@ from sklearn.preprocessing import OneHotEncoder
 # ---------------------------------------------------------------------
 # Configuración (ajusta la conexión a la de tu .env)
 # ---------------------------------------------------------------------
-DB_URL = ("mysql+pymysql://app_transportes:CambiaEstaClave_456@localhost/"
-          "agencia_transportes?charset=utf8mb4")
+import os
+from dotenv import load_dotenv
+from sqlalchemy.engine import URL
+
+load_dotenv()
+
+def _engine():
+    url = URL.create("mysql+pymysql",
+                     username=os.getenv("DB_USER"), password=os.getenv("DB_PASSWORD"),
+                     host=os.getenv("DB_HOST"), port=int(os.getenv("DB_PORT", 3306)),
+                     database=os.getenv("DB_NAME"),
+                     query={"charset": "utf8mb4"})
+    ssl_ca = os.getenv("DB_SSL_CA")
+    args = {"ssl": {"ca": ssl_ca}} if ssl_ca else {}
+    return create_engine(url, connect_args=args)
+
+
 UMBRAL_ALTA = 0.70
 SEMILLA = 42
 
@@ -80,7 +95,7 @@ def feriados_de(anios):
 # 1. Dataset desde la base de datos
 # ---------------------------------------------------------------------
 def cargar_dataset():
-    engine = create_engine(DB_URL)
+    engine = _engine()
     df = pd.read_sql("SELECT * FROM v_dataset_ocupacion", engine)
 
     # MySQL devuelve Decimal en varias columnas: pasar todo a número

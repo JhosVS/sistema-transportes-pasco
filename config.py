@@ -22,3 +22,10 @@ class Config:
 
     APISPERU_TOKEN = os.getenv('APISPERU_TOKEN', '')
     GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')
+
+    DB_SSL_CA = os.getenv('DB_SSL_CA', '')
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,      # reconecta si Aiven apagó la conexión
+        "pool_recycle": 280,
+        **({"connect_args": {"ssl": {"ca": DB_SSL_CA}}} if DB_SSL_CA else {}),
+    }
