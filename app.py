@@ -22,6 +22,7 @@ from routes.admin.encomiendas import encomiendas_admin_bp
 from routes.admin.mantenimientos import mantenimientos_bp
 from routes.admin.programacion import programacion_bp
 from routes.admin.asistente import asistente_bp
+from routes.admin.tareas import tareas_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -50,6 +51,7 @@ app.register_blueprint(encomiendas_admin_bp)
 app.register_blueprint(mantenimientos_bp)
 app.register_blueprint(programacion_bp)
 app.register_blueprint(asistente_bp)
+app.register_blueprint(tareas_bp)
 
 # Proteger rutas administrativas
 @app.before_request

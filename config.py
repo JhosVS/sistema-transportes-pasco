@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev_secret_key_123')
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+
+    if not SECRET_KEY:
+        raise RuntimeError('Falta configurar SECRET_KEY')
     
     # Configuración de MySQL
     DB_HOST = os.getenv('DB_HOST', os.getenv('MYSQLHOST', 'localhost'))

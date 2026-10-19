@@ -24,6 +24,11 @@ from sklearn.metrics import (accuracy_score, brier_score_loss, confusion_matrix,
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
+
 # ---------------------------------------------------------------------
 # Configuración (ajusta la conexión a la de tu .env)
 # ---------------------------------------------------------------------
@@ -121,16 +126,19 @@ def cargar_dataset():
 # ---------------------------------------------------------------------
 def armar_pipeline(modelo):
     pre = ColumnTransformer(
-        [("clima", OneHotEncoder(handle_unknown="ignore"), CATEGORICAS)],
-        remainder="passthrough")
+        [("clima", OneHotEncoder(handle_unknown="ignore"), CATEGORICAS),
+         ("num", StandardScaler(), NUMERICAS)])
     return Pipeline([("pre", pre), ("modelo", modelo)])
 
 
 CANDIDATOS = {
+    "RegresionLogistica": lambda: LogisticRegression(max_iter=1000, random_state=SEMILLA),
+    "ArbolDecision": lambda: DecisionTreeClassifier(max_depth=6, min_samples_leaf=5, random_state=SEMILLA),
     "RandomForest": lambda: RandomForestClassifier(
         n_estimators=300, min_samples_leaf=3, random_state=SEMILLA, n_jobs=-1),
     "GradientBoosting": lambda: GradientBoostingClassifier(
         n_estimators=200, learning_rate=0.05, max_depth=3, random_state=SEMILLA),
+    "KNN": lambda: KNeighborsClassifier(n_neighbors=15),
 }
 
 

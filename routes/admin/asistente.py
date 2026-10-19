@@ -1,7 +1,7 @@
 # routes/admin/asistente.py
 from flask import Blueprint, jsonify, render_template, request, session
 
-from asistente.agentes import LIMITE_USUARIO_DIA, MAX_PREGUNTA, responder
+from asistente.orquestador import LIMITE_USUARIO_DIA, MAX_PREGUNTA, responder
 
 asistente_bp = Blueprint('asistente', __name__, url_prefix='/admin/asistente')
 

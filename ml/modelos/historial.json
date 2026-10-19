@@ -22,5 +22,17 @@
     "recall": 0.7293,
     "f1": 0.776,
     "aceptado": true
+  },
+  {
+    "fecha": "2026-10-19T15:50:42",
+    "modelo": "GradientBoosting",
+    "filas": 2583,
+    "prueba": 388,
+    "auc": 0.9393,
+    "auc_anterior": 0.9392,
+    "accuracy": 0.8454,
+    "recall": 0.7293,
+    "f1": 0.7638,
+    "aceptado": true
   }
 ]

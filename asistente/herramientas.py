@@ -7,6 +7,30 @@ from models import Ruta, db
 
 DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
+import threading
+_ctx = threading.local()
+
+
+def iniciar_registro():
+    _ctx.salidas = []
+
+
+def salidas():
+    return getattr(_ctx, "salidas", [])
+
+
+def segura(fn):
+    @functools.wraps(fn)
+    def envoltura(*a, **k):
+        try:
+            res = fn(*a, **k)
+        except Exception as e:
+            db.session.rollback()
+            res = {"error": f"No se pudo obtener el dato: {e}"}
+        if hasattr(_ctx, "salidas"):
+            _ctx.salidas.append(res)
+        return res
+    return envoltura
 
 # ------------------------- utilidades -------------------------
 def segura(fn):

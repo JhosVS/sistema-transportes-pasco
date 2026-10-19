@@ -4,18 +4,17 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h3 class="fw-bold text-dark mb-1">
-            <i class="bi bi-graph-up-arrow text-warning me-2"></i>Predicción de Demanda
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-graph-up-arrow text-warning me-2"></i>Predicción de Demanda
         </h3>
-        <p class="text-muted small mb-0">Modelo que estima si un viaje tendrá <strong>alta ocupación</strong>
-            (70% o más de asientos vendidos).</p>
+        <p class="text-muted small mb-0">Estima si un viaje tendrá <strong>alta ocupación</strong> (70% o más de
+            asientos vendidos).</p>
     </div>
     {% if metricas %}
-    <div class="text-end">
+    <div class="text-end small">
         <span class="badge bg-dark">{{ metricas.modelo }}</span>
-        <div class="text-muted small mt-1">Entrenado: {{ metricas.entrenado_en.replace('T', ' ') }}</div>
+        <div class="text-muted">Entrenado: {{ metricas.entrenado_en.replace('T', ' ') }}</div>
     </div>
     {% endif %}
 </div>
@@ -23,434 +22,518 @@
 {% if not metricas %}
 <div class="alert alert-warning shadow-sm">
     <i class="bi bi-exclamation-triangle me-2"></i>
-    Aún no hay un modelo entrenado. Ejecuta <code>python ml/entrenar_modelo.py</code> desde la raíz del proyecto
-    y recarga esta página.
+    Aún no hay un modelo entrenado. Ejecuta <code>python -m ml.entrenar_modelo</code> y recarga esta página.
 </div>
 {% else %}
 
-<!-- Aprendizaje del modelo -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-            <div class="fw-semibold"><i class="bi bi-arrow-repeat text-warning me-1"></i>Aprendizaje del modelo</div>
-            <div class="small text-muted">
-                Viajes en la base: <strong>{{ total_actual }}</strong> ·
-                usados en el último entrenamiento: <strong>{{ metricas.filas.total }}</strong> ·
-                nuevos: <strong class="{{ 'text-success' if nuevos > 0 else '' }}">{{ nuevos }}</strong>
+<ul class="nav nav-tabs mb-4" id="tabsPred" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-predecir"
+            type="button">
+            <i class="bi bi-magic me-1"></i>Predecir</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-evaluacion" type="button">
+            <i class="bi bi-clipboard-data me-1"></i>Evaluación</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-modelos" type="button">
+            <i class="bi bi-trophy me-1"></i>Modelos</button></li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- ====================== PESTAÑA 1: PREDECIR ====================== -->
+    <div class="tab-pane fade show active" id="tab-predecir">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-warning text-dark fw-bold">Predecir un viaje</div>
+                    <div class="card-body">
+                        <form id="formPred" class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Ruta</label>
+                                <select id="fRuta" class="form-select" required>
+                                    {% for r in rutas %}
+                                    <option value="{{ r.id }}">{{ r.nombre }} (S/ {{ '%.2f'|format(r.precio) }} · {{
+                                        r.capacidad }} asientos)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Fecha</label>
+                                <input type="date" id="fFecha" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Hora</label>
+                                <input type="time" id="fHora" class="form-control" value="20:00" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Clima esperado</label>
+                                <select id="fClima" class="form-select">
+                                    {% for c in climas %}<option value="{{ c }}">{{ c|capitalize }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-dark w-100" type="submit">
+                                    <i class="bi bi-lightning-charge text-warning me-1"></i>Calcular probabilidad
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="resultado" class="mt-4 d-none">
+                            <div class="d-flex justify-content-between align-items-end">
+                                <span class="text-muted small">Probabilidad de alta ocupación</span>
+                                <span class="fs-3 fw-bold" id="rProb"></span>
+                            </div>
+                            <div class="progress mb-2" style="height:14px">
+                                <div id="rBarra" class="progress-bar"></div>
+                            </div>
+                            <div class="mb-2"><span id="rVeredicto" class="badge"></span>
+                                <span id="rExtra" class="small text-muted ms-1"></span>
+                            </div>
+                            <div class="alert alert-light border small mb-0" id="rReco"></div>
+                        </div>
+                        <div id="errorPred" class="alert alert-danger small mt-3 d-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-dark text-white fw-bold">Próximos viajes programados (14 días)</div>
+                    <div class="card-body p-0">
+                        {% if proximos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Ruta</th>
+                                        <th>Bus</th>
+                                        <th style="width:32%">Prob. alta ocupación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in proximos %}
+                                    <tr>
+                                        <td>{{ p.fecha.strftime('%d/%m') }}</td>
+                                        <td>{{ p.hora }}</td>
+                                        <td>{{ p.ruta }}</td>
+                                        <td>{{ p.placa }} <span class="text-muted">({{ p.capacidad }})</span></td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height:8px">
+                                                    <div class="progress-bar {{ 'bg-danger' if p.prob >= 70 else ('bg-warning' if p.prob >= 40 else 'bg-secondary') }}"
+                                                        style="width: {{ p.prob }}%"></div>
+                                                </div>
+                                                <strong>{{ p.prob }}%</strong>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted small">No hay viajes programados en los próximos 14 días.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        <button id="btnRe" class="btn btn-dark">
-            <i class="bi bi-arrow-repeat text-warning me-1"></i>Reentrenar modelo
-        </button>
     </div>
-    <div id="msgRe" class="alert small d-none mx-3"></div>
 
-    {% if historial %}
-    <div class="table-responsive border-top">
-        <table class="table table-sm align-middle mb-0 small">
-            <thead class="table-light">
-                <tr><th>Fecha</th><th>Modelo</th><th>Viajes</th><th>AUC nuevo</th>
-                    <th>AUC anterior</th><th>Exactitud</th><th>Resultado</th></tr>
-            </thead>
-            <tbody>
-                {% for h in (historial[-8:])|reverse %}
-                <tr>
-                    <td>{{ h.fecha.replace('T', ' ') }}</td>
-                    <td>{{ h.modelo }}</td>
-                    <td>{{ h.filas }}</td>
-                    <td>{{ h.auc }}</td>
-                    <td>{{ h.auc_anterior if h.auc_anterior is not none else '–' }}</td>
-                    <td>{{ (h.accuracy * 100)|round(1) }}%</td>
-                    <td>{% if h.aceptado %}<span class="badge bg-success">Adoptado</span>
-                        {% else %}<span class="badge bg-secondary">Rechazado</span>{% endif %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-</div>
+    <!-- ====================== PESTAÑA 2: EVALUACIÓN ====================== -->
+    <div class="tab-pane fade" id="tab-evaluacion">
+        <div class="alert alert-light border small">
+            <i class="bi bi-info-circle text-warning me-1"></i>
+            Evaluado con los <strong>{{ metricas.filas.prueba }}</strong> viajes más recientes
+            (desde {{ metricas.periodo.prueba_desde }}), que el modelo no vio al entrenar.
+        </div>
 
-<!-- KPIs -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card bg-dark text-white border-0 shadow-sm h-100"><div class="card-body">
-            <div class="text-warning text-uppercase fw-bold small">Exactitud</div>
-            <h2 class="fw-bold mb-0" id="kpiAcc">–</h2>
-            <div class="small text-white-50">Línea base: {{ (metricas.accuracy_linea_base * 100)|round(1) }}%</div>
-        </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card bg-warning text-dark border-0 shadow-sm h-100"><div class="card-body">
-            <div class="text-uppercase fw-bold small">Precisión</div>
-            <h2 class="fw-bold mb-0" id="kpiPrec">–</h2>
-            <div class="small">Cuando dice "alta", acierta</div>
-        </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card bg-dark text-white border-0 shadow-sm h-100"><div class="card-body">
-            <div class="text-warning text-uppercase fw-bold small">Recall</div>
-            <h2 class="fw-bold mb-0" id="kpiRec">–</h2>
-            <div class="small text-white-50">Viajes llenos detectados</div>
-        </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card bg-warning text-dark border-0 shadow-sm h-100"><div class="card-body">
-            <div class="text-uppercase fw-bold small">AUC / Brier</div>
-            <h2 class="fw-bold mb-0">{{ metricas.metricas_prueba.roc_auc }}
-                <small class="fs-6">/ {{ metricas.metricas_prueba.brier }}</small></h2>
-            <div class="small">F1 (umbral 0.5): {{ metricas.metricas_prueba.f1 }}</div>
-        </div></div>
-    </div>
-</div>
-
-<!-- Umbral -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-body py-3">
-        <div class="row align-items-center g-3">
-            <div class="col-md-3 fw-semibold">
-                <i class="bi bi-sliders text-warning me-1"></i> Umbral de decisión:
-                <span id="umbralTxt" class="badge bg-dark">0.50</span>
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-lg-3">
+                <div class="card bg-dark text-white border-0 shadow-sm h-100">
+                    <div class="card-body py-3">
+                        <div class="text-warning text-uppercase fw-bold small">Exactitud</div>
+                        <h3 class="fw-bold mb-0" id="kpiAcc">–</h3>
+                        <div class="small text-white-50">Línea base: {{ (metricas.accuracy_linea_base * 100)|round(1)
+                            }}%</div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-5">
-                <input type="range" class="form-range" id="umbral" min="0.20" max="0.80" step="0.05" value="0.50">
+            <div class="col-6 col-lg-3">
+                <div class="card bg-warning text-dark border-0 shadow-sm h-100">
+                    <div class="card-body py-3">
+                        <div class="text-uppercase fw-bold small">Precisión</div>
+                        <h3 class="fw-bold mb-0" id="kpiPrec">–</h3>
+                        <div class="small">Si dice "alta", acierta</div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4 small text-muted">
-                Más bajo = detecta más viajes llenos pero con más falsas alarmas. Actualiza la matriz y las
-                métricas en vivo.
+            <div class="col-6 col-lg-3">
+                <div class="card bg-dark text-white border-0 shadow-sm h-100">
+                    <div class="card-body py-3">
+                        <div class="text-warning text-uppercase fw-bold small">Recall</div>
+                        <h3 class="fw-bold mb-0" id="kpiRec">–</h3>
+                        <div class="small text-white-50">Viajes llenos detectados</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card bg-warning text-dark border-0 shadow-sm h-100">
+                    <div class="card-body py-3">
+                        <div class="text-uppercase fw-bold small">AUC / Brier</div>
+                        <h3 class="fw-bold mb-0">{{ metricas.metricas_prueba.roc_auc }} <small class="fs-6">/ {{
+                                metricas.metricas_prueba.brier }}</small></h3>
+                        <div class="small">Separación / error</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body py-3">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-3 fw-semibold"><i class="bi bi-sliders text-warning me-1"></i>Umbral:
+                        <span id="umbralTxt" class="badge bg-dark">0.50</span>
+                    </div>
+                    <div class="col-md-5"><input type="range" class="form-range" id="umbral" min="0.20" max="0.80"
+                            step="0.05" value="0.50"></div>
+                    <div class="col-md-4 small text-muted">Más bajo = detecta más viajes llenos, con más falsas alarmas.
+                        Actualiza la matriz y las tarjetas.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-dark text-white fw-bold">Matriz de confusión</div>
+                    <div class="card-body">
+                        <table class="table table-bordered text-center align-middle mb-2" style="table-layout:fixed">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Predijo<br>No alta</th>
+                                    <th>Predijo<br>Alta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>Real<br>No alta</th>
+                                    <td id="cmVN"></td>
+                                    <td id="cmFP"></td>
+                                </tr>
+                                <tr>
+                                    <th>Real<br>Alta</th>
+                                    <td id="cmFN"></td>
+                                    <td id="cmVP"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="small text-muted">Verde: aciertos. Rojo: errores (arriba a la derecha, falsa alarma;
+                            abajo a la izquierda, viaje lleno que se escapó).</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-dark text-white fw-bold">Curva de calibración</div>
+                    <div class="card-body">
+                        <div style="height:260px"><canvas id="chartCalib"></canvas></div>
+                        <div class="small text-muted mt-2">Cerca de la diagonal = probabilidades honestas: si dice 80%,
+                            se llena cerca del 80%.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-dark text-white fw-bold">Dispersión: ocupación real vs. probabilidad
+                    </div>
+                    <div class="card-body">
+                        <div style="height:300px"><canvas id="chartDisp"></canvas></div>
+                        <div class="small text-muted mt-2">Un punto por viaje. Ideal: rojos a la derecha y azules a la
+                            izquierda.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-dark text-white fw-bold">Variables que más influyen</div>
+                    <div class="card-body">
+                        <div style="height:300px"><canvas id="chartImp"></canvas></div>
+                        <div class="small text-muted mt-2">Cuánto baja el AUC al desordenar cada variable.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row g-4 mb-4">
-    <!-- Matriz de confusión -->
-    <div class="col-lg-5">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-grid-3x3-gap text-warning me-2"></i>Matriz de confusión (prueba)
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered text-center align-middle mb-2" style="table-layout:fixed">
-                    <thead>
-                        <tr><th></th><th>Predijo<br>No alta</th><th>Predijo<br>Alta</th></tr>
+    <!-- ====================== PESTAÑA 3: MODELOS ====================== -->
+    <div class="tab-pane fade" id="tab-modelos">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white fw-bold">Comparación de {{ metricas.comparacion_validacion|length
+                }} modelos (validación)</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Modelo</th>
+                            <th>AUC</th>
+                            <th>F1</th>
+                            <th>Exactitud</th>
+                            <th>Precisión</th>
+                            <th>Recall</th>
+                            <th>Brier</th>
+                            <th></th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr><th>Real<br>No alta</th><td id="cmVN"></td><td id="cmFP"></td></tr>
-                        <tr><th>Real<br>Alta</th><td id="cmFN"></td><td id="cmVP"></td></tr>
+                        {% for nombre, m in metricas.comparacion_validacion.items()|sort(attribute='1.roc_auc',
+                        reverse=True) %}
+                        <tr class="{{ 'table-warning fw-semibold' if nombre == metricas.modelo }}">
+                            <td>{{ nombre }}</td>
+                            <td>{{ m.roc_auc }}</td>
+                            <td>{{ m.f1 }}</td>
+                            <td>{{ (m.accuracy * 100)|round(1) }}%</td>
+                            <td>{{ (m.precision * 100)|round(1) }}%</td>
+                            <td>{{ (m.recall * 100)|round(1) }}%</td>
+                            <td>{{ m.brier }}</td>
+                            <td>{% if nombre == metricas.modelo %}<span class="badge bg-success">Elegido</span>{% endif
+                                %}</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
-                <div class="small text-muted">
-                    Verde: aciertos. Rojo: errores (falsa alarma abajo-derecha de "No alta"; viaje lleno que se
-                    escapó en "Real Alta / Predijo No alta").
-                    Evaluado con los {{ metricas.filas.prueba }} viajes más recientes
-                    (desde {{ metricas.periodo.prueba_desde }}), que el modelo no vio al entrenar.
-                </div>
             </div>
+            <div class="card-body small text-muted">
+                Criterio: mayor AUC en validación (qué tan bien separa viajes llenos de no llenos sin depender del
+                umbral).
+                La diferencia entre modelos es pequeña, porque los datos son simulados y las reglas son simples.
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="fw-semibold"><i class="bi bi-arrow-repeat text-warning me-1"></i>Aprendizaje del modelo
+                    </div>
+                    <div class="small text-muted">
+                        Viajes en la base: <strong>{{ total_actual }}</strong> ·
+                        usados en el último entrenamiento: <strong>{{ metricas.filas.total }}</strong> ·
+                        nuevos: <strong class="{{ 'text-success' if nuevos > 0 else '' }}">{{ nuevos }}</strong>
+                    </div>
+                </div>
+                <button id="btnRe" class="btn btn-dark"><i class="bi bi-arrow-repeat text-warning me-1"></i>Reentrenar
+                    modelo</button>
+            </div>
+            <div id="msgRe" class="alert small d-none mx-3"></div>
+            {% if historial %}
+            <div class="table-responsive border-top">
+                <table class="table table-sm align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Modelo</th>
+                            <th>Viajes</th>
+                            <th>AUC nuevo</th>
+                            <th>AUC anterior</th>
+                            <th>Exactitud</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in (historial[-8:])|reverse %}
+                        <tr>
+                            <td>{{ h.fecha.replace('T', ' ') }}</td>
+                            <td>{{ h.modelo }}</td>
+                            <td>{{ h.filas }}</td>
+                            <td>{{ h.auc }}</td>
+                            <td>{{ h.auc_anterior if h.auc_anterior is not none else '–' }}</td>
+                            <td>{{ (h.accuracy * 100)|round(1) }}%</td>
+                            <td>{% if h.aceptado %}<span class="badge bg-success">Adoptado</span>{% else %}<span
+                                    class="badge bg-secondary">Rechazado</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Calibración -->
-    <div class="col-lg-7">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-bullseye text-warning me-2"></i>Curva de calibración
-            </div>
-            <div class="card-body">
-                <div style="height:290px"><canvas id="chartCalib"></canvas></div>
-                <div class="small text-muted mt-2">
-                    Si la línea sigue la diagonal, las probabilidades son honestas: de los viajes con 80% de
-                    probabilidad, se llenan cerca de 80%.
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+</div><!-- /tab-content -->
 
-<div class="row g-4 mb-4">
-    <!-- Dispersión -->
-    <div class="col-lg-7">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-dot text-warning fs-4"></i>Dispersión: ocupación real vs. probabilidad predicha
-            </div>
-            <div class="card-body">
-                <div style="height:330px"><canvas id="chartDisp"></canvas></div>
-                <div class="small text-muted mt-2">
-                    Un punto por viaje. La línea horizontal es el 70% que define "alta ocupación" y la vertical
-                    es el umbral elegido. Lo ideal: puntos rojos a la derecha y azules a la izquierda.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Importancia -->
-    <div class="col-lg-5">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-bar-chart-fill text-warning me-2"></i>Variables que más influyen
-            </div>
-            <div class="card-body">
-                <div style="height:330px"><canvas id="chartImp"></canvas></div>
-                <div class="small text-muted mt-2">
-                    Cuánto baja el AUC al desordenar cada variable (importancia por permutación).
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Formulario + próximos viajes -->
-<div class="row g-4 mb-4">
-    <div class="col-lg-5">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-warning text-dark fw-bold">
-                <i class="bi bi-magic me-2"></i>Predecir un viaje
-            </div>
-            <div class="card-body">
-                <form id="formPred" class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Ruta</label>
-                        <select id="fRuta" class="form-select" required>
-                            {% for r in rutas %}
-                            <option value="{{ r.id }}">{{ r.nombre }} (S/ {{ '%.2f'|format(r.precio) }} · {{ r.capacidad }} asientos)</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small fw-semibold">Fecha</label>
-                        <input type="date" id="fFecha" class="form-control" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small fw-semibold">Hora de salida</label>
-                        <input type="time" id="fHora" class="form-control" value="20:00" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Clima esperado</label>
-                        <select id="fClima" class="form-select">
-                            {% for c in climas %}<option value="{{ c }}">{{ c|capitalize }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <button class="btn btn-dark w-100" type="submit">
-                            <i class="bi bi-lightning-charge text-warning me-1"></i>Calcular probabilidad
-                        </button>
-                    </div>
-                </form>
-
-                <div id="resultado" class="mt-4 d-none">
-                    <div class="d-flex justify-content-between align-items-end">
-                        <span class="text-muted small">Probabilidad de alta ocupación</span>
-                        <span class="fs-3 fw-bold" id="rProb"></span>
-                    </div>
-                    <div class="progress mb-2" style="height:14px">
-                        <div id="rBarra" class="progress-bar" role="progressbar"></div>
-                    </div>
-                    <div class="mb-2"><span id="rVeredicto" class="badge"></span>
-                        <span id="rExtra" class="small text-muted ms-1"></span></div>
-                    <div class="alert alert-light border small mb-0" id="rReco"></div>
-                </div>
-                <div id="errorPred" class="alert alert-danger small mt-3 d-none"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-7">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-calendar-check text-warning me-2"></i>Próximos viajes programados (14 días)
-            </div>
-            <div class="card-body p-0">
-                {% if proximos %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 small">
-                        <thead class="table-light">
-                            <tr><th>Fecha</th><th>Hora</th><th>Ruta</th><th>Bus</th><th style="width:32%">Prob. alta ocupación</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for p in proximos %}
-                            <tr>
-                                <td>{{ p.fecha.strftime('%d/%m') }}</td>
-                                <td>{{ p.hora }}</td>
-                                <td>{{ p.ruta }}</td>
-                                <td>{{ p.placa }} <span class="text-muted">({{ p.capacidad }})</span></td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress flex-grow-1" style="height:8px">
-                                            <div class="progress-bar {{ 'bg-danger' if p.prob >= 70 else ('bg-warning' if p.prob >= 40 else 'bg-secondary') }}"
-                                                 style="width: {{ p.prob }}%"></div>
-                                        </div>
-                                        <strong>{{ p.prob }}%</strong>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="p-4 text-center text-muted small">
-                    No hay viajes en estado <em>Programado</em> para los próximos 14 días.
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+<div class="alert alert-secondary small mt-2">
+    <i class="bi bi-info-circle me-1"></i>
+    Datos de {{ metricas.periodo.desde }} a {{ metricas.periodo.hasta }} ({{ metricas.filas.total }} viajes simulados;
+    {{ (metricas.porcentaje_alta_ocupacion * 100)|round(1) }}% con alta ocupación). Como la historia es simulada,
+    el modelo recupera las reglas del simulador; no representa aún el comportamiento real del negocio.
 </div>
 
 <script>
-const M = {{ metricas|tojson }};
-const DISP = M.dispersion;
-const AZUL = '#0d6efd', ROJO = '#dc3545', AMARILLO = '#ffc107';
+    const M = {{ metricas| tojson }};
+    const DISP = M.dispersion;
+    const AZUL = '#0d6efd', ROJO = '#dc3545', AMARILLO = '#ffc107';
 
-// ---------- Matriz y KPIs según umbral ----------
-function recalcular(t) {
-    let vn = 0, fp = 0, fn = 0, vp = 0;
-    DISP.forEach(d => {
-        const pred = d.probabilidad >= t ? 1 : 0;
-        if (d.alta_real && pred) vp++;
-        else if (d.alta_real && !pred) fn++;
-        else if (!d.alta_real && pred) fp++;
-        else vn++;
-    });
-    const n = vn + fp + fn + vp;
-    const pct = x => (x * 100).toFixed(1) + '%';
-    document.getElementById('kpiAcc').textContent = pct((vn + vp) / n);
-    document.getElementById('kpiPrec').textContent = pct(vp + fp ? vp / (vp + fp) : 0);
-    document.getElementById('kpiRec').textContent = pct(vp + fn ? vp / (vp + fn) : 0);
-
-    const celda = (id, valor, ok) => {
-        const el = document.getElementById(id);
-        el.innerHTML = `<div class="fs-4 fw-bold">${valor}</div><div class="small">${(valor / n * 100).toFixed(1)}%</div>`;
-        el.style.background = ok ? 'rgba(25,135,84,.18)' : 'rgba(220,53,69,.18)';
-    };
-    celda('cmVN', vn, true); celda('cmFP', fp, false);
-    celda('cmFN', fn, false); celda('cmVP', vp, true);
-}
-
-// ---------- Gráficos ----------
-const chartDisp = new Chart(document.getElementById('chartDisp'), {
-    type: 'scatter',
-    data: { datasets: [
-        { label: 'Viaje con alta ocupación', backgroundColor: ROJO + 'AA',
-          data: DISP.filter(d => d.alta_real).map(d => ({ x: d.probabilidad * 100, y: d.ocupacion_real * 100 })) },
-        { label: 'Viaje sin alta ocupación', backgroundColor: AZUL + 'AA',
-          data: DISP.filter(d => !d.alta_real).map(d => ({ x: d.probabilidad * 100, y: d.ocupacion_real * 100 })) },
-        { type: 'line', label: '70% real', data: [{ x: 0, y: 70 }, { x: 100, y: 70 }],
-          borderColor: '#212529', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0 },
-        { type: 'line', label: 'Umbral', data: [{ x: 50, y: 0 }, { x: 50, y: 100 }],
-          borderColor: AMARILLO, borderWidth: 2, pointRadius: 0 },
-    ]},
-    options: { responsive: true, maintainAspectRatio: false,
-        scales: {
-            x: { min: 0, max: 100, title: { display: true, text: 'Probabilidad predicha de alta ocupación (%)' } },
-            y: { min: 0, max: 105, title: { display: true, text: 'Ocupación real (%)' } } },
-        plugins: { legend: { position: 'bottom' } } }
-});
-
-new Chart(document.getElementById('chartCalib'), {
-    type: 'scatter',
-    data: { datasets: [
-        { label: 'Modelo', showLine: true, borderColor: AMARILLO, backgroundColor: AMARILLO,
-          borderWidth: 3, tension: 0.2, pointRadius: 5,
-          data: M.calibracion.prob_predicha.map((x, i) => ({ x: x * 100, y: M.calibracion.frecuencia_real[i] * 100 })) },
-        { label: 'Calibración perfecta', showLine: true, borderColor: '#6c757d', borderDash: [6, 4],
-          borderWidth: 1.5, pointRadius: 0, data: [{ x: 0, y: 0 }, { x: 100, y: 100 }] },
-    ]},
-    options: { responsive: true, maintainAspectRatio: false,
-        scales: {
-            x: { min: 0, max: 100, title: { display: true, text: 'Probabilidad predicha (%)' } },
-            y: { min: 0, max: 100, title: { display: true, text: 'Frecuencia real de alta ocupación (%)' } } },
-        plugins: { legend: { position: 'bottom' } } }
-});
-
-const imp = M.importancia_variables.slice(0, 10);
-new Chart(document.getElementById('chartImp'), {
-    type: 'bar',
-    data: { labels: imp.map(d => d.variable),
-            datasets: [{ data: imp.map(d => d.importancia), backgroundColor: AMARILLO, borderColor: '#212529', borderWidth: 1 }] },
-    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { x: { title: { display: true, text: 'Caída del AUC' } } } }
-});
-
-// ---------- Umbral ----------
-const slider = document.getElementById('umbral');
-function aplicarUmbral() {
-    const t = parseFloat(slider.value);
-    document.getElementById('umbralTxt').textContent = t.toFixed(2);
-    recalcular(t);
-    chartDisp.data.datasets[3].data = [{ x: t * 100, y: 0 }, { x: t * 100, y: 100 }];
-    chartDisp.update('none');
-}
-slider.addEventListener('input', aplicarUmbral);
-aplicarUmbral();
-
-// ---------- Formulario de predicción ----------
-const manana = new Date(Date.now() + 86400000);
-document.getElementById('fFecha').value = manana.toISOString().slice(0, 10);
-
-document.getElementById('formPred').addEventListener('submit', async e => {
-    e.preventDefault();
-    const err = document.getElementById('errorPred');
-    err.classList.add('d-none');
-    try {
-        const resp = await fetch("{{ url_for('predicciones.predecir') }}", {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_ruta: document.getElementById('fRuta').value,
-                fecha: document.getElementById('fFecha').value,
-                hora: document.getElementById('fHora').value,
-                clima: document.getElementById('fClima').value,
-                umbral: parseFloat(slider.value) })
+    function recalcular(t) {
+        let vn = 0, fp = 0, fn = 0, vp = 0;
+        DISP.forEach(d => {
+            const pred = d.probabilidad >= t ? 1 : 0;
+            if (d.alta_real && pred) vp++; else if (d.alta_real && !pred) fn++;
+            else if (!d.alta_real && pred) fp++; else vn++;
         });
-        const r = await resp.json();
-        if (!resp.ok) throw new Error(r.error || 'Error al predecir');
-
-        const color = r.probabilidad >= 70 ? 'danger' : (r.probabilidad >= 40 ? 'warning' : 'secondary');
-        document.getElementById('resultado').classList.remove('d-none');
-        document.getElementById('rProb').textContent = r.probabilidad + '%';
-        const barra = document.getElementById('rBarra');
-        barra.style.width = r.probabilidad + '%';
-        barra.className = 'progress-bar bg-' + color;
-        const v = document.getElementById('rVeredicto');
-        v.className = 'badge bg-' + (r.alta ? 'danger' : 'secondary');
-        v.textContent = r.alta ? 'Alta ocupación esperada' : 'Ocupación no alta';
-        let extra = `${r.capacidad} asientos · S/ ${r.precio.toFixed(2)}`;
-        if (r.es_feriado) extra += ' · feriado';
-        else if (r.es_vispera) extra += ' · víspera de feriado';
-        document.getElementById('rExtra').textContent = extra;
-        document.getElementById('rReco').textContent = r.recomendacion;
-    } catch (ex) {
-        err.textContent = ex.message;
-        err.classList.remove('d-none');
+        const n = vn + fp + fn + vp, pct = x => (x * 100).toFixed(1) + '%';
+        document.getElementById('kpiAcc').textContent = pct((vn + vp) / n);
+        document.getElementById('kpiPrec').textContent = pct(vp + fp ? vp / (vp + fp) : 0);
+        document.getElementById('kpiRec').textContent = pct(vp + fn ? vp / (vp + fn) : 0);
+        const celda = (id, v, ok) => {
+            const el = document.getElementById(id);
+            el.innerHTML = `<div class="fs-4 fw-bold">${v}</div><div class="small">${(v / n * 100).toFixed(1)}%</div>`;
+            el.style.background = ok ? 'rgba(25,135,84,.18)' : 'rgba(220,53,69,.18)';
+        };
+        celda('cmVN', vn, true); celda('cmFP', fp, false); celda('cmFN', fn, false); celda('cmVP', vp, true);
     }
-});
 
-// ---------- Reentrenar ----------
-document.getElementById('btnRe').addEventListener('click', async e => {
-    const btn = e.currentTarget, msg = document.getElementById('msgRe');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Entrenando...';
-    msg.className = 'alert alert-info small mx-3';
-    msg.textContent = 'Entrenando con los datos actuales. Puede tardar unos segundos...';
-    try {
-        const resp = await fetch("{{ url_for('predicciones.reentrenar') }}", { method: 'POST' });
-        const r = await resp.json();
-        if (!resp.ok) throw new Error(r.error || 'Error al reentrenar');
-        msg.className = 'alert small mx-3 alert-' + (r.aceptado ? 'success' : 'warning');
-        msg.textContent = r.aceptado
-            ? `Modelo actualizado con ${r.filas} viajes. AUC: ${r.auc}.`
-            : `El modelo nuevo (AUC ${r.auc}) no mejoró al actual (AUC ${r.auc_anterior}); se conserva el anterior.`;
-        setTimeout(() => location.reload(), 2500);
-    } catch (ex) {
-        msg.className = 'alert alert-danger small mx-3';
-        msg.textContent = ex.message;
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-arrow-repeat text-warning me-1"></i>Reentrenar modelo';
+    const chartDisp = new Chart(document.getElementById('chartDisp'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Alta ocupación', backgroundColor: ROJO + 'AA',
+                    data: DISP.filter(d => d.alta_real).map(d => ({ x: d.probabilidad * 100, y: d.ocupacion_real * 100 }))
+                },
+                {
+                    label: 'No alta', backgroundColor: AZUL + 'AA',
+                    data: DISP.filter(d => !d.alta_real).map(d => ({ x: d.probabilidad * 100, y: d.ocupacion_real * 100 }))
+                },
+                {
+                    type: 'line', label: '70% real', data: [{ x: 0, y: 70 }, { x: 100, y: 70 }],
+                    borderColor: '#212529', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0
+                },
+                {
+                    type: 'line', label: 'Umbral', data: [{ x: 50, y: 0 }, { x: 50, y: 100 }],
+                    borderColor: AMARILLO, borderWidth: 2, pointRadius: 0
+                },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { min: 0, max: 100, title: { display: true, text: 'Probabilidad predicha (%)' } },
+                y: { min: 0, max: 105, title: { display: true, text: 'Ocupación real (%)' } }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const chartCalib = new Chart(document.getElementById('chartCalib'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Modelo', showLine: true, borderColor: AMARILLO, backgroundColor: AMARILLO, borderWidth: 3, tension: 0.2, pointRadius: 5,
+                    data: M.calibracion.prob_predicha.map((x, i) => ({ x: x * 100, y: M.calibracion.frecuencia_real[i] * 100 }))
+                },
+                {
+                    label: 'Calibración perfecta', showLine: true, borderColor: '#6c757d', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0,
+                    data: [{ x: 0, y: 0 }, { x: 100, y: 100 }]
+                },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { min: 0, max: 100, title: { display: true, text: 'Probabilidad predicha (%)' } },
+                y: { min: 0, max: 100, title: { display: true, text: 'Frecuencia real (%)' } }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const imp = M.importancia_variables.slice(0, 10);
+    const chartImp = new Chart(document.getElementById('chartImp'), {
+        type: 'bar',
+        data: {
+            labels: imp.map(d => d.variable),
+            datasets: [{ data: imp.map(d => d.importancia), backgroundColor: AMARILLO, borderColor: '#212529', borderWidth: 1 }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Caída del AUC' } } }
+        }
+    });
+
+    // Los gráficos de pestañas ocultas se redimensionan al mostrarse
+    document.querySelectorAll('#tabsPred [data-bs-toggle="tab"]').forEach(b =>
+        b.addEventListener('shown.bs.tab', () => [chartDisp, chartCalib, chartImp].forEach(c => c.resize())));
+
+    const slider = document.getElementById('umbral');
+    function aplicarUmbral() {
+        const t = parseFloat(slider.value);
+        document.getElementById('umbralTxt').textContent = t.toFixed(2);
+        recalcular(t);
+        chartDisp.data.datasets[3].data = [{ x: t * 100, y: 0 }, { x: t * 100, y: 100 }];
+        chartDisp.update('none');
     }
-});
+    slider.addEventListener('input', aplicarUmbral);
+    aplicarUmbral();
 
+    // Formulario
+    document.getElementById('fFecha').value = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    document.getElementById('formPred').addEventListener('submit', async e => {
+        e.preventDefault();
+        const err = document.getElementById('errorPred');
+        err.classList.add('d-none');
+        try {
+            const resp = await fetch("{{ url_for('predicciones.predecir') }}", {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_ruta: document.getElementById('fRuta').value, fecha: document.getElementById('fFecha').value,
+                    hora: document.getElementById('fHora').value, clima: document.getElementById('fClima').value,
+                    umbral: parseFloat(slider.value)
+                })
+            });
+            const r = await resp.json();
+            if (!resp.ok) throw new Error(r.error || 'Error al predecir');
+            const color = r.probabilidad >= 70 ? 'danger' : (r.probabilidad >= 40 ? 'warning' : 'secondary');
+            document.getElementById('resultado').classList.remove('d-none');
+            document.getElementById('rProb').textContent = r.probabilidad + '%';
+            const barra = document.getElementById('rBarra');
+            barra.style.width = r.probabilidad + '%'; barra.className = 'progress-bar bg-' + color;
+            const v = document.getElementById('rVeredicto');
+            v.className = 'badge bg-' + (r.alta ? 'danger' : 'secondary');
+            v.textContent = r.alta ? 'Alta ocupación esperada' : 'Ocupación no alta';
+            let extra = `${r.capacidad} asientos · S/ ${r.precio.toFixed(2)}`;
+            if (r.es_feriado) extra += ' · feriado'; else if (r.es_vispera) extra += ' · víspera de feriado';
+            document.getElementById('rExtra').textContent = extra;
+            document.getElementById('rReco').textContent = r.recomendacion;
+        } catch (ex) { err.textContent = ex.message; err.classList.remove('d-none'); }
+    });
+
+    // Reentrenar
+    document.getElementById('btnRe').addEventListener('click', async e => {
+        const btn = e.currentTarget, msg = document.getElementById('msgRe');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Entrenando...';
+        msg.className = 'alert alert-info small mx-3';
+        msg.textContent = 'Entrenando con los datos actuales. Puede tardar unos segundos...';
+        try {
+            const resp = await fetch("{{ url_for('predicciones.reentrenar') }}", { method: 'POST' });
+            const r = await resp.json();
+            if (!resp.ok) throw new Error(r.error || 'Error al reentrenar');
+            msg.className = 'alert small mx-3 alert-' + (r.aceptado ? 'success' : 'warning');
+            msg.textContent = r.aceptado ? `Modelo actualizado con ${r.filas} viajes. AUC: ${r.auc}.`
+                : `El modelo nuevo (AUC ${r.auc}) no mejoró al actual (AUC ${r.auc_anterior}); se conserva el anterior.`;
+            setTimeout(() => location.reload(), 2500);
+        } catch (ex) {
+            msg.className = 'alert alert-danger small mx-3'; msg.textContent = ex.message;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat text-warning me-1"></i>Reentrenar modelo';
+        }
+    });
 </script>
 {% endif %}
 {% endblock %}
