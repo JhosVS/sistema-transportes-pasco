@@ -268,7 +268,6 @@ class ProgramacionViaje(db.Model):
     estado_viaje = db.Column(
         db.Enum("Programado", "En Ruta", "Finalizado", "Cancelado", name="viaje_estado"),
         nullable=False, default="Programado")
-    clima = db.Column(db.String(30))
     es_feriado = db.Column(db.Boolean, nullable=False, default=False)
 
     horario = db.relationship("Horario")

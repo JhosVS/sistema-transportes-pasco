@@ -10,7 +10,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # Una fila por viaje, con sus pasajes, ingresos y retraso ya calculados
 BASE_VIAJES = """
-SELECT pv.id_viaje, pv.fecha_salida, pv.estado_viaje, pv.clima, h.id_ruta,
+SELECT pv.id_viaje, pv.fecha_salida, pv.estado_viaje, h.id_ruta,
        ve.id_vehiculo, ve.capacidad_asientos AS cap, r.distancia_km AS dist,
        TIMESTAMPDIFF(MINUTE, pv.llegada_programada, pv.llegada_real) AS retraso,
        (SELECT COUNT(*) FROM detalle_pasajes d
@@ -111,13 +111,6 @@ def api_todo():
                              GROUP BY ru.id_ruta, so.nombre_sede, sd.nombre_sede
                              ORDER BY pas DESC LIMIT 10""", p)]
 
-    # --- Retraso según clima ---
-    clima = [{'clima': r['clima'], 'retraso': round(float(r['ret']), 1), 'viajes': int(r['n'])}
-             for r in _q(f"""SELECT COALESCE(clima,'sin dato') clima, AVG(retraso) ret, COUNT(*) n
-                             FROM {VIAJES}
-                             WHERE t.estado_viaje='Finalizado' AND retraso IS NOT NULL
-                             GROUP BY COALESCE(clima,'sin dato') ORDER BY ret""", p)]
-
     # --- Pasajeros por grupo de edad ---
     edades = {r['grupo']: int(r['n']) for r in _q("""
         SELECT CASE WHEN d.fecha_nacimiento IS NULL THEN 'Sin dato'
@@ -158,7 +151,7 @@ def api_todo():
     for v in vehiculos:
         estado_flota[v['estado']] = estado_flota.get(v['estado'], 0) + 1
 
-    return jsonify(kpis=kpis, semana=semana, rutas=rutas, clima=clima, edad=edad,
+    return jsonify(kpis=kpis, semana=semana, rutas=rutas, edad=edad,
                    pagos=pagos, flota=flota, estado_flota=estado_flota,
                    prediccion=_prediccion())
 
@@ -202,8 +195,7 @@ def _prediccion():
             if not (h and h.ruta and veh):
                 continue
             hs = v.salida_programada
-            filas.append(_fila(h.ruta, v.fecha_salida, hs.hour + hs.minute / 60,
-                               v.clima or 'despejado', veh.capacidad_asientos, float(v.precio_pasaje)))
+            filas.append(_fila(h.ruta, v.fecha_salida, hs.hour + hs.minute / 60, veh.capacidad_asientos, float(v.precio_pasaje)))
             info.append({'fecha': hs.strftime('%d/%m %H:%M'), 'ruta': _nombre_ruta(h.ruta),
                          'placa': veh.placa})
         if filas:

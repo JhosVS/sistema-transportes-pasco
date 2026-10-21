@@ -1,446 +1,462 @@
 {
-  "entrenado_en": "2026-10-19T15:50:42",
+  "entrenado_en": "2026-10-21T17:32:45",
   "modelo": "GradientBoosting",
   "umbral_alta": 0.7,
   "filas": {
-    "total": 2583,
-    "entrenamiento": 1808,
+    "total": 2577,
+    "entrenamiento": 1803,
     "validacion": 387,
-    "prueba": 388
+    "prueba": 387
   },
   "periodo": {
-    "desde": "2024-10-13",
-    "hasta": "2026-10-18",
-    "prueba_desde": "2026-06-27"
+    "desde": "2024-10-21",
+    "hasta": "2026-10-20",
+    "prueba_desde": "2026-07-03"
   },
-  "porcentaje_alta_ocupacion": 0.2683,
+  "porcentaje_alta_ocupacion": 0.2996,
   "comparacion_validacion": {
     "RegresionLogistica": {
-      "accuracy": 0.8553,
-      "precision": 0.6477,
-      "recall": 0.6951,
-      "f1": 0.6706,
-      "roc_auc": 0.921,
-      "brier": 0.0933
+      "accuracy": 0.8424,
+      "precision": 0.7232,
+      "recall": 0.7297,
+      "f1": 0.7265,
+      "roc_auc": 0.9132,
+      "brier": 0.1082
     },
     "ArbolDecision": {
-      "accuracy": 0.8553,
-      "precision": 0.6912,
-      "recall": 0.5732,
-      "f1": 0.6267,
-      "roc_auc": 0.9182,
-      "brier": 0.0956
+      "accuracy": 0.7984,
+      "precision": 0.7797,
+      "recall": 0.4144,
+      "f1": 0.5412,
+      "roc_auc": 0.9074,
+      "brier": 0.1068
     },
     "RandomForest": {
-      "accuracy": 0.8501,
-      "precision": 0.65,
-      "recall": 0.6341,
-      "f1": 0.642,
-      "roc_auc": 0.9202,
-      "brier": 0.0929
+      "accuracy": 0.8372,
+      "precision": 0.7182,
+      "recall": 0.7117,
+      "f1": 0.7149,
+      "roc_auc": 0.917,
+      "brier": 0.1057
     },
     "GradientBoosting": {
-      "accuracy": 0.8527,
-      "precision": 0.6812,
-      "recall": 0.5732,
-      "f1": 0.6225,
-      "roc_auc": 0.9251,
-      "brier": 0.0914
+      "accuracy": 0.8346,
+      "precision": 0.7327,
+      "recall": 0.6667,
+      "f1": 0.6981,
+      "roc_auc": 0.9269,
+      "brier": 0.104
     },
     "KNN": {
       "accuracy": 0.8527,
-      "precision": 0.6404,
-      "recall": 0.6951,
-      "f1": 0.6667,
-      "roc_auc": 0.9168,
-      "brier": 0.0944
+      "precision": 0.725,
+      "recall": 0.7838,
+      "f1": 0.7532,
+      "roc_auc": 0.9104,
+      "brier": 0.1059
     }
   },
   "metricas_prueba": {
-    "accuracy": 0.8454,
-    "precision": 0.8017,
-    "recall": 0.7293,
-    "f1": 0.7638,
-    "roc_auc": 0.9393,
-    "brier": 0.1001
+    "accuracy": 0.8682,
+    "precision": 0.8095,
+    "recall": 0.7907,
+    "f1": 0.8,
+    "roc_auc": 0.9395,
+    "brier": 0.0917
   },
-  "accuracy_linea_base": 0.6572,
+  "accuracy_linea_base": 0.6667,
   "matriz_confusion": {
-    "vn": 231,
+    "vn": 234,
     "fp": 24,
-    "fn": 36,
-    "vp": 97
+    "fn": 27,
+    "vp": 102
   },
   "calibracion": {
     "prob_predicha": [
-      0.0054,
-      0.0123,
-      0.0228,
-      0.0546,
-      0.1698,
-      0.4746,
-      0.7515,
-      0.9076
+      0.0051,
+      0.0136,
+      0.0294,
+      0.0802,
+      0.2282,
+      0.5289,
+      0.7591,
+      0.9099
     ],
     "frecuencia_real": [
       0.0,
-      0.0,
-      0.0204,
-      0.0833,
-      0.2917,
-      0.6531,
-      0.7083,
+      0.0208,
+      0.0417,
+      0.0612,
+      0.1875,
+      0.6458,
+      0.7292,
       0.9796
     ]
   },
   "importancia_variables": [
     {
       "variable": "precio_pasaje",
-      "importancia": 0.1449
-    },
-    {
-      "variable": "mes",
-      "importancia": 0.0419
-    },
-    {
-      "variable": "dia_semana_num",
-      "importancia": 0.0119
-    },
-    {
-      "variable": "es_fin_semana",
-      "importancia": 0.01
+      "importancia": 0.0798
     },
     {
       "variable": "id_ruta",
-      "importancia": 0.0099
+      "importancia": 0.0517
+    },
+    {
+      "variable": "mes",
+      "importancia": 0.0252
+    },
+    {
+      "variable": "dia_semana_num",
+      "importancia": 0.0191
+    },
+    {
+      "variable": "es_fin_semana",
+      "importancia": 0.0089
     },
     {
       "variable": "es_feriado",
-      "importancia": 0.0034
-    },
-    {
-      "variable": "capacidad_asientos",
-      "importancia": 0.002
+      "importancia": 0.0068
     },
     {
       "variable": "es_vispera",
-      "importancia": 0.0007
-    },
-    {
-      "variable": "clima",
-      "importancia": 0.0007
-    },
-    {
-      "variable": "hora_salida_decimal",
-      "importancia": 0.0005
-    },
-    {
-      "variable": "id_sede_destino",
-      "importancia": -0.0001
-    },
-    {
-      "variable": "id_sede_origen",
-      "importancia": -0.0005
+      "importancia": 0.0057
     },
     {
       "variable": "distancia_km",
-      "importancia": -0.0006
+      "importancia": 0.0035
+    },
+    {
+      "variable": "id_sede_origen",
+      "importancia": 0.0033
+    },
+    {
+      "variable": "id_sede_destino",
+      "importancia": 0.0029
+    },
+    {
+      "variable": "capacidad_asientos",
+      "importancia": -0.0
+    },
+    {
+      "variable": "hora_salida_decimal",
+      "importancia": -0.0003
     },
     {
       "variable": "dia_mes",
-      "importancia": -0.0019
+      "importancia": -0.003
     }
   ],
   "dispersion": [
     {
-      "ocupacion_real": 0.5417,
-      "probabilidad": 0.6371,
-      "alta_real": 0
+      "ocupacion_real": 0.8,
+      "probabilidad": 0.6385,
+      "alta_real": 1
     },
     {
       "ocupacion_real": 0.7273,
-      "probabilidad": 0.4015,
+      "probabilidad": 0.2954,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0088,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0088,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8,
-      "probabilidad": 0.8779,
+      "ocupacion_real": 0.925,
+      "probabilidad": 0.9525,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.6522,
-      "probabilidad": 0.2692,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9286,
-      "probabilidad": 0.8536,
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.8912,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.85,
-      "probabilidad": 0.3693,
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.8858,
       "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6944,
-      "probabilidad": 0.6341,
-      "alta_real": 0
     },
     {
       "ocupacion_real": 0.5333,
-      "probabilidad": 0.0761,
+      "probabilidad": 0.025,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.8864,
-      "probabilidad": 0.9452,
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0256,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6957,
+      "probabilidad": 0.1927,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.8966,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.7292,
-      "probabilidad": 0.8675,
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9313,
       "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0129,
+      "alta_real": 0
     },
     {
       "ocupacion_real": 0.4667,
-      "probabilidad": 0.0907,
+      "probabilidad": 0.0086,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.4773,
-      "probabilidad": 0.0065,
+      "ocupacion_real": 0.9524,
+      "probabilidad": 0.7552,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.675,
+      "probabilidad": 0.1734,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.625,
-      "probabilidad": 0.0914,
-      "alta_real": 0
+      "ocupacion_real": 0.7222,
+      "probabilidad": 0.0951,
+      "alta_real": 1
     },
     {
-      "ocupacion_real": 0.6944,
-      "probabilidad": 0.0621,
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.7994,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5682,
+      "probabilidad": 0.0284,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.6,
-      "probabilidad": 0.2218,
+      "probabilidad": 0.1323,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0161,
+      "ocupacion_real": 0.6667,
+      "probabilidad": 0.0759,
       "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0161,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8889,
-      "probabilidad": 0.4329,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6522,
-      "probabilidad": 0.2456,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9425,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.875,
-      "probabilidad": 0.4756,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9154,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0393,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9375,
-      "probabilidad": 0.9393,
-      "alta_real": 1
     },
     {
       "ocupacion_real": 0.4667,
-      "probabilidad": 0.0393,
+      "probabilidad": 0.0058,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.9,
-      "probabilidad": 0.9166,
+      "ocupacion_real": 0.5833,
+      "probabilidad": 0.2894,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0081,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5217,
+      "probabilidad": 0.0347,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.575,
+      "probabilidad": 0.9599,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8611,
+      "probabilidad": 0.6133,
       "alta_real": 1
     },
     {
       "ocupacion_real": 0.8864,
-      "probabilidad": 0.9151,
+      "probabilidad": 0.9599,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.6364,
-      "probabilidad": 0.1725,
+      "ocupacion_real": 0.6591,
+      "probabilidad": 0.2504,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.6905,
-      "probabilidad": 0.9257,
-      "alta_real": 0
+      "ocupacion_real": 0.9,
+      "probabilidad": 0.5939,
+      "alta_real": 1
     },
     {
       "ocupacion_real": 0.5333,
-      "probabilidad": 0.029,
+      "probabilidad": 0.0333,
       "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9048,
+      "probabilidad": 0.9275,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8125,
+      "probabilidad": 0.9461,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0333,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9251,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6304,
+      "probabilidad": 0.2203,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8636,
+      "probabilidad": 0.9336,
+      "alta_real": 1
     },
     {
       "ocupacion_real": 0.5333,
-      "probabilidad": 0.029,
+      "probabilidad": 0.008,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.7083,
-      "probabilidad": 0.8929,
+      "ocupacion_real": 0.8542,
+      "probabilidad": 0.7954,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.1109,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.525,
-      "probabilidad": 0.1543,
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0112,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.975,
-      "probabilidad": 0.8246,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4348,
-      "probabilidad": 0.0258,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.55,
-      "probabilidad": 0.0816,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5,
-      "probabilidad": 0.0549,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0137,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6818,
-      "probabilidad": 0.0441,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0137,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.3095,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5652,
-      "probabilidad": 0.284,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8409,
-      "probabilidad": 0.9404,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9375,
-      "probabilidad": 0.9653,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7222,
-      "probabilidad": 0.4142,
+      "ocupacion_real": 0.725,
+      "probabilidad": 0.1482,
       "alta_real": 1
     },
     {
       "ocupacion_real": 1.0,
-      "probabilidad": 0.9075,
+      "probabilidad": 0.7678,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.0289,
+      "ocupacion_real": 0.6389,
+      "probabilidad": 0.0856,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.975,
-      "probabilidad": 0.8842,
+      "ocupacion_real": 0.5682,
+      "probabilidad": 0.0264,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.0954,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6944,
+      "probabilidad": 0.0871,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0088,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5909,
+      "probabilidad": 0.3812,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.587,
+      "probabilidad": 0.0375,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.965,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.0289,
-      "alta_real": 0
+      "ocupacion_real": 0.775,
+      "probabilidad": 0.7187,
+      "alta_real": 1
     },
     {
-      "ocupacion_real": 0.7045,
-      "probabilidad": 0.138,
+      "ocupacion_real": 0.7222,
+      "probabilidad": 0.5342,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.775,
+      "probabilidad": 0.965,
       "alta_real": 1
     },
     {
       "ocupacion_real": 0.75,
-      "probabilidad": 0.9344,
+      "probabilidad": 0.2678,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.8409,
-      "probabilidad": 0.9054,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9048,
-      "probabilidad": 0.7978,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.425,
-      "probabilidad": 0.1476,
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0306,
       "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.875,
+      "probabilidad": 0.9494,
+      "alta_real": 1
     },
     {
       "ocupacion_real": 0.5333,
-      "probabilidad": 0.0252,
+      "probabilidad": 0.0306,
       "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8636,
+      "probabilidad": 0.9361,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6522,
+      "probabilidad": 0.1987,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9361,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.95,
+      "probabilidad": 0.9409,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0113,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.008,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7708,
+      "probabilidad": 0.8296,
+      "alta_real": 1
     },
     {
       "ocupacion_real": 1.0,
@@ -448,724 +464,14 @@
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0252,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.0802,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4348,
-      "probabilidad": 0.0496,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7,
-      "probabilidad": 0.0963,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0509,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4545,
-      "probabilidad": 0.0439,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0136,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7045,
-      "probabilidad": 0.2867,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0136,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7222,
-      "probabilidad": 0.3899,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8542,
-      "probabilidad": 0.9594,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7391,
-      "probabilidad": 0.2585,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9443,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7,
-      "probabilidad": 0.4923,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0344,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0344,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.8322,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.8825,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5227,
-      "probabilidad": 0.1668,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.825,
-      "probabilidad": 0.9158,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9167,
-      "probabilidad": 0.9644,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7222,
-      "probabilidad": 0.0785,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9048,
-      "probabilidad": 0.7834,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.45,
-      "probabilidad": 0.1448,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0253,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.7794,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0253,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5435,
-      "probabilidad": 0.0501,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0449,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.575,
-      "probabilidad": 0.0598,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0146,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.2667,
-      "probabilidad": 0.0146,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5909,
-      "probabilidad": 0.0469,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7708,
-      "probabilidad": 0.4217,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.875,
-      "probabilidad": 0.8719,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8261,
-      "probabilidad": 0.1637,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7778,
-      "probabilidad": 0.3453,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.775,
-      "probabilidad": 0.3527,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7857,
-      "probabilidad": 0.9078,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0328,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.9479,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.8915,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0328,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9524,
-      "probabilidad": 0.8928,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.925,
-      "probabilidad": 0.9061,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8182,
-      "probabilidad": 0.1146,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9089,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9545,
-      "probabilidad": 0.9206,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7333,
-      "probabilidad": 0.032,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.0686,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.925,
-      "probabilidad": 0.1345,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8,
-      "probabilidad": 0.0369,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7391,
-      "probabilidad": 0.8188,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.6227,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9,
-      "probabilidad": 0.8344,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5455,
-      "probabilidad": 0.0375,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0122,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0122,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.725,
-      "probabilidad": 0.2798,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6389,
-      "probabilidad": 0.3895,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7857,
-      "probabilidad": 0.9325,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8636,
-      "probabilidad": 0.9468,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6304,
-      "probabilidad": 0.2113,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.875,
-      "probabilidad": 0.4919,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9375,
-      "probabilidad": 0.8427,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8,
-      "probabilidad": 0.8123,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0132,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0132,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5227,
-      "probabilidad": 0.0514,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.7364,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8182,
-      "probabilidad": 0.7614,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.475,
-      "probabilidad": 0.0731,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6042,
-      "probabilidad": 0.8273,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.2667,
-      "probabilidad": 0.0177,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0177,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.525,
-      "probabilidad": 0.6607,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5556,
-      "probabilidad": 0.0355,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3913,
-      "probabilidad": 0.022,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0207,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.575,
-      "probabilidad": 0.0417,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5682,
-      "probabilidad": 0.0086,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0066,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6429,
-      "probabilidad": 0.0806,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.2667,
-      "probabilidad": 0.0066,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6957,
-      "probabilidad": 0.086,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.7837,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4722,
-      "probabilidad": 0.2047,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.725,
-      "probabilidad": 0.2164,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.8815,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9762,
-      "probabilidad": 0.8236,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.775,
-      "probabilidad": 0.7842,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0188,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0188,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5455,
-      "probabilidad": 0.0689,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7917,
-      "probabilidad": 0.8616,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6818,
-      "probabilidad": 0.82,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0139,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8095,
-      "probabilidad": 0.6204,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.675,
-      "probabilidad": 0.6263,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.575,
-      "probabilidad": 0.0651,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0139,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0313,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4783,
-      "probabilidad": 0.0195,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0246,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4722,
-      "probabilidad": 0.0169,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0079,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0079,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3864,
-      "probabilidad": 0.0187,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7273,
-      "probabilidad": 0.1616,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5435,
-      "probabilidad": 0.1229,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.625,
-      "probabilidad": 0.2804,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7,
-      "probabilidad": 0.8753,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7083,
-      "probabilidad": 0.9097,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6111,
-      "probabilidad": 0.1913,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9762,
-      "probabilidad": 0.7515,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7727,
-      "probabilidad": 0.7956,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0165,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0165,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6364,
-      "probabilidad": 0.0581,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9792,
-      "probabilidad": 0.8983,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9,
-      "probabilidad": 0.7754,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0139,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.55,
-      "probabilidad": 0.0414,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0139,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.619,
-      "probabilidad": 0.4387,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4722,
-      "probabilidad": 0.0285,
+      "ocupacion_real": 0.4444,
+      "probabilidad": 0.1098,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.5,
-      "probabilidad": 0.5022,
+      "probabilidad": 0.1201,
       "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3043,
-      "probabilidad": 0.0105,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6111,
-      "probabilidad": 0.0159,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5,
-      "probabilidad": 0.0232,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3636,
-      "probabilidad": 0.0188,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0079,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4167,
-      "probabilidad": 0.231,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0079,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.2103,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6087,
-      "probabilidad": 0.1362,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.86,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7857,
-      "probabilidad": 0.8875,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.55,
-      "probabilidad": 0.3049,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7727,
-      "probabilidad": 0.773,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.875,
-      "probabilidad": 0.8859,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0186,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0186,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.725,
-      "probabilidad": 0.6493,
-      "alta_real": 1
     },
     {
       "ocupacion_real": 0.5682,
@@ -1173,629 +479,1254 @@
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.619,
-      "probabilidad": 0.669,
+      "ocupacion_real": 0.5278,
+      "probabilidad": 0.2056,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.725,
-      "probabilidad": 0.0658,
+      "ocupacion_real": 0.8333,
+      "probabilidad": 0.1812,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.6591,
-      "probabilidad": 0.6079,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5556,
-      "probabilidad": 0.0316,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6,
-      "probabilidad": 0.0148,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0148,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.6835,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4565,
-      "probabilidad": 0.0208,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4167,
-      "probabilidad": 0.0193,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.55,
-      "probabilidad": 0.0281,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4773,
-      "probabilidad": 0.0113,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0083,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.65,
-      "probabilidad": 0.1636,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.2667,
-      "probabilidad": 0.0083,
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0322,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.6739,
-      "probabilidad": 0.1227,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5556,
-      "probabilidad": 0.191,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8,
-      "probabilidad": 0.2801,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8571,
-      "probabilidad": 0.8512,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.8805,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0207,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6,
-      "probabilidad": 0.0179,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9111,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9276,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9611,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6818,
-      "probabilidad": 0.7589,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.9549,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5556,
-      "probabilidad": 0.0175,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5333,
-      "probabilidad": 0.0087,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0087,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6,
-      "probabilidad": 0.037,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.85,
-      "probabilidad": 0.4777,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8125,
-      "probabilidad": 0.679,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4565,
-      "probabilidad": 0.0056,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.575,
-      "probabilidad": 0.0143,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0066,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0033,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3182,
-      "probabilidad": 0.0045,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5476,
-      "probabilidad": 0.061,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0033,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6389,
-      "probabilidad": 0.0947,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.625,
-      "probabilidad": 0.7998,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8636,
-      "probabilidad": 0.5907,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.475,
-      "probabilidad": 0.1024,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5435,
-      "probabilidad": 0.0374,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0074,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0074,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.65,
-      "probabilidad": 0.57,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7381,
-      "probabilidad": 0.6301,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7045,
-      "probabilidad": 0.6243,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6458,
-      "probabilidad": 0.6942,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4773,
-      "probabilidad": 0.0272,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5476,
-      "probabilidad": 0.2733,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.015,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0048,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5,
-      "probabilidad": 0.2567,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4444,
-      "probabilidad": 0.0106,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0048,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3478,
-      "probabilidad": 0.0066,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.525,
-      "probabilidad": 0.0118,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0025,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4091,
-      "probabilidad": 0.0062,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5909,
-      "probabilidad": 0.0584,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0025,
+      "probabilidad": 0.708,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.825,
-      "probabilidad": 0.7023,
+      "probabilidad": 0.7582,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.9792,
-      "probabilidad": 0.7652,
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0465,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6944,
+      "probabilidad": 0.6239,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9762,
+      "probabilidad": 0.9576,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.587,
-      "probabilidad": 0.0443,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.675,
-      "probabilidad": 0.1418,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5556,
-      "probabilidad": 0.0696,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6905,
-      "probabilidad": 0.504,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0056,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9545,
-      "probabilidad": 0.5667,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0056,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.5246,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8333,
-      "probabilidad": 0.748,
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9584,
       "alta_real": 1
     },
     {
       "ocupacion_real": 0.5227,
-      "probabilidad": 0.021,
+      "probabilidad": 0.257,
       "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0045,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.134,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0106,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0045,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6875,
-      "probabilidad": 0.187,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.45,
-      "probabilidad": 0.0096,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3913,
-      "probabilidad": 0.0077,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.45,
-      "probabilidad": 0.0111,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3889,
-      "probabilidad": 0.0066,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4091,
-      "probabilidad": 0.0035,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.475,
-      "probabilidad": 0.0554,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0025,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0025,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.8313,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.7161,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4565,
-      "probabilidad": 0.063,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7,
-      "probabilidad": 0.1855,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6389,
-      "probabilidad": 0.0935,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.56,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0072,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0072,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8095,
-      "probabilidad": 0.6206,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.7708,
-      "probabilidad": 0.7878,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.9773,
-      "probabilidad": 0.5798,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4091,
-      "probabilidad": 0.0262,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.45,
-      "probabilidad": 0.0214,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7143,
-      "probabilidad": 0.3277,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0049,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0049,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.65,
-      "probabilidad": 0.3333,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4444,
-      "probabilidad": 0.0128,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.413,
-      "probabilidad": 0.007,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5,
-      "probabilidad": 0.0119,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5278,
-      "probabilidad": 0.0071,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5,
-      "probabilidad": 0.0475,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0024,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.2955,
-      "probabilidad": 0.0033,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.2667,
-      "probabilidad": 0.0024,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8409,
-      "probabilidad": 0.6637,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6522,
-      "probabilidad": 0.05,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.65,
-      "probabilidad": 0.1513,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.95,
-      "probabilidad": 0.7179,
-      "alta_real": 1
     },
     {
       "ocupacion_real": 0.5833,
-      "probabilidad": 0.0746,
+      "probabilidad": 0.528,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7333,
+      "probabilidad": 0.0302,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.95,
+      "probabilidad": 0.9231,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9237,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.0302,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.881,
-      "probabilidad": 0.5057,
+      "probabilidad": 0.933,
       "alta_real": 1
     },
     {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9525,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6522,
+      "probabilidad": 0.203,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9676,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.85,
+      "probabilidad": 0.3159,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.0591,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8333,
+      "probabilidad": 0.2508,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9811,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6667,
+      "probabilidad": 0.048,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9773,
+      "probabilidad": 0.5819,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8,
+      "probabilidad": 0.2576,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7778,
+      "probabilidad": 0.1019,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5217,
+      "probabilidad": 0.0272,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.003,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6875,
+      "probabilidad": 0.2678,
+      "alta_real": 0
+    },
+    {
       "ocupacion_real": 0.3333,
-      "probabilidad": 0.0055,
+      "probabilidad": 0.0035,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8056,
+      "probabilidad": 0.3822,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.9318,
+      "probabilidad": 0.962,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.9524,
+      "probabilidad": 0.9627,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5909,
+      "probabilidad": 0.2611,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.725,
+      "probabilidad": 0.7376,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.725,
+      "probabilidad": 0.6308,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.017,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6667,
+      "probabilidad": 0.0174,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6042,
+      "probabilidad": 0.6992,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6591,
+      "probabilidad": 0.6205,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7857,
+      "probabilidad": 0.6454,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4565,
+      "probabilidad": 0.0905,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0094,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9167,
+      "probabilidad": 0.5286,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.2667,
+      "probabilidad": 0.0059,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.775,
+      "probabilidad": 0.5137,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0379,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5556,
+      "probabilidad": 0.0576,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4318,
+      "probabilidad": 0.0089,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.725,
+      "probabilidad": 0.1093,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5556,
+      "probabilidad": 0.2863,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.041,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0225,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6905,
+      "probabilidad": 0.6229,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4348,
+      "probabilidad": 0.6352,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.95,
+      "probabilidad": 0.769,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8636,
+      "probabilidad": 0.7673,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.575,
+      "probabilidad": 0.2559,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5682,
+      "probabilidad": 0.0613,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5833,
+      "probabilidad": 0.1583,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0178,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6905,
+      "probabilidad": 0.7475,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0178,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8958,
+      "probabilidad": 0.8042,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8182,
+      "probabilidad": 0.769,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6522,
+      "probabilidad": 0.0975,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.7387,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0062,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4722,
+      "probabilidad": 0.037,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.4,
-      "probabilidad": 0.0055,
+      "probabilidad": 0.0044,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.7083,
-      "probabilidad": 0.6999,
+      "ocupacion_real": 0.5208,
+      "probabilidad": 0.5594,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7619,
+      "probabilidad": 0.4193,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.7045,
-      "probabilidad": 0.5623,
+      "ocupacion_real": 0.575,
+      "probabilidad": 0.035,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4318,
+      "probabilidad": 0.0093,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0308,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.525,
+      "probabilidad": 0.0291,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4783,
+      "probabilidad": 0.0163,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6136,
+      "probabilidad": 0.1467,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0052,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0037,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.2775,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.875,
+      "probabilidad": 0.8661,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.9,
+      "probabilidad": 0.8566,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6591,
+      "probabilidad": 0.0929,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0163,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9048,
+      "probabilidad": 0.783,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6818,
+      "probabilidad": 0.7906,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0163,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8958,
+      "probabilidad": 0.8303,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5217,
+      "probabilidad": 0.0866,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.7988,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7857,
+      "probabilidad": 0.4917,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0067,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5556,
+      "probabilidad": 0.0323,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6818,
+      "probabilidad": 0.5404,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0048,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0504,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5682,
+      "probabilidad": 0.0094,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4444,
+      "probabilidad": 0.0252,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.0394,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.14,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4348,
+      "probabilidad": 0.0165,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0052,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0037,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6111,
+      "probabilidad": 0.3568,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.625,
+      "probabilidad": 0.3042,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9375,
+      "probabilidad": 0.8767,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6818,
+      "probabilidad": 0.1008,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8095,
+      "probabilidad": 0.873,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6136,
+      "probabilidad": 0.772,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.875,
+      "probabilidad": 0.7645,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0161,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0161,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7857,
+      "probabilidad": 0.7515,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0831,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9583,
+      "probabilidad": 0.8182,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0056,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.425,
+      "probabilidad": 0.0401,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6111,
+      "probabilidad": 0.0295,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.3571,
       "alta_real": 1
     },
     {
       "ocupacion_real": 0.4773,
-      "probabilidad": 0.0171,
+      "probabilidad": 0.4993,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.8,
-      "probabilidad": 0.5388,
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0047,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4318,
+      "probabilidad": 0.0089,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4444,
+      "probabilidad": 0.0245,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0313,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0132,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0027,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0033,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.1055,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.2848,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5227,
+      "probabilidad": 0.0936,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7857,
+      "probabilidad": 0.8569,
       "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7273,
+      "probabilidad": 0.8585,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6389,
+      "probabilidad": 0.2297,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.2289,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.95,
+      "probabilidad": 0.9818,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.2289,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8958,
+      "probabilidad": 0.9862,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8478,
+      "probabilidad": 0.6425,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9733,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.9716,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0408,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.75,
+      "probabilidad": 0.0158,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0027,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0023,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7292,
+      "probabilidad": 0.4391,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.65,
+      "probabilidad": 0.3967,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4318,
+      "probabilidad": 0.0165,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0665,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6111,
+      "probabilidad": 0.0303,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3913,
+      "probabilidad": 0.0319,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5714,
+      "probabilidad": 0.1658,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0094,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0059,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6136,
+      "probabilidad": 0.0624,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5278,
+      "probabilidad": 0.1982,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5227,
+      "probabilidad": 0.757,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.168,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.7402,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8333,
+      "probabilidad": 0.6491,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.9375,
+      "probabilidad": 0.7292,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.013,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0134,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7727,
+      "probabilidad": 0.6921,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.775,
+      "probabilidad": 0.641,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4565,
+      "probabilidad": 0.0791,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.625,
+      "probabilidad": 0.0468,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5714,
+      "probabilidad": 0.4191,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0044,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.0333,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0066,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7083,
+      "probabilidad": 0.5886,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.2727,
+      "probabilidad": 0.0094,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.475,
+      "probabilidad": 0.0217,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0233,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.2667,
+      "probabilidad": 0.0042,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5455,
+      "probabilidad": 0.1231,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0144,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.003,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3864,
+      "probabilidad": 0.0879,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.775,
+      "probabilidad": 0.3156,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 1.0,
+      "probabilidad": 0.8253,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8056,
+      "probabilidad": 0.1974,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7083,
+      "probabilidad": 0.8496,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0154,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0154,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7273,
+      "probabilidad": 0.7445,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6667,
+      "probabilidad": 0.7262,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.413,
+      "probabilidad": 0.0923,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8095,
+      "probabilidad": 0.7193,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.65,
+      "probabilidad": 0.7351,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0058,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.375,
+      "probabilidad": 0.0298,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0041,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6364,
+      "probabilidad": 0.5426,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.825,
+      "probabilidad": 0.3792,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.3636,
+      "probabilidad": 0.0089,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5278,
+      "probabilidad": 0.0203,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0314,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5833,
+      "probabilidad": 0.1032,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0045,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3913,
+      "probabilidad": 0.0156,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5909,
+      "probabilidad": 0.0954,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.65,
+      "probabilidad": 0.257,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6389,
+      "probabilidad": 0.3083,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9545,
+      "probabilidad": 0.8613,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7619,
+      "probabilidad": 0.8512,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8,
+      "probabilidad": 0.7405,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7083,
+      "probabilidad": 0.8104,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0141,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0141,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0819,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.619,
+      "probabilidad": 0.7677,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7727,
+      "probabilidad": 0.7674,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.0403,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.625,
+      "probabilidad": 0.4335,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0058,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5833,
+      "probabilidad": 0.5067,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4722,
+      "probabilidad": 0.0261,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0041,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4773,
+      "probabilidad": 0.0085,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4722,
+      "probabilidad": 0.0185,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.0252,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0038,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5238,
+      "probabilidad": 0.1018,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4348,
+      "probabilidad": 0.0124,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4667,
+      "probabilidad": 0.0032,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6591,
+      "probabilidad": 0.0907,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.575,
+      "probabilidad": 0.2444,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8409,
+      "probabilidad": 0.8386,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5278,
+      "probabilidad": 0.2883,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.875,
+      "probabilidad": 0.8167,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0151,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0151,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5476,
+      "probabilidad": 0.743,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.625,
+      "probabilidad": 0.804,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6522,
+      "probabilidad": 0.0888,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.8636,
+      "probabilidad": 0.7875,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8,
+      "probabilidad": 0.7451,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.0279,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6429,
+      "probabilidad": 0.3006,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0024,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7708,
+      "probabilidad": 0.4474,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.002,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0127,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4545,
+      "probabilidad": 0.0071,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.45,
+      "probabilidad": 0.0253,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4444,
+      "probabilidad": 0.0098,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0061,
+      "alta_real": 0
     },
     {
       "ocupacion_real": 0.4,
@@ -1803,293 +1734,353 @@
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.4444,
-      "probabilidad": 0.0107,
+      "ocupacion_real": 0.4773,
+      "probabilidad": 0.1703,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0048,
+      "ocupacion_real": 0.4783,
+      "probabilidad": 0.0325,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.6429,
-      "probabilidad": 0.1736,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0048,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.413,
-      "probabilidad": 0.0048,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3,
-      "probabilidad": 0.0071,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4444,
-      "probabilidad": 0.007,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4583,
-      "probabilidad": 0.0741,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4,
-      "probabilidad": 0.0025,
+      "ocupacion_real": 0.6667,
+      "probabilidad": 0.2015,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.4091,
-      "probabilidad": 0.0034,
+      "probabilidad": 0.0788,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.2667,
-      "probabilidad": 0.0025,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.5833,
-      "probabilidad": 0.1213,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6739,
-      "probabilidad": 0.061,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.8182,
-      "probabilidad": 0.668,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.75,
-      "probabilidad": 0.7614,
+      "ocupacion_real": 0.85,
+      "probabilidad": 0.7109,
       "alta_real": 1
     },
     {
       "ocupacion_real": 0.675,
-      "probabilidad": 0.1533,
+      "probabilidad": 0.2062,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.016,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.016,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7917,
-      "probabilidad": 0.8803,
+      "ocupacion_real": 0.8333,
+      "probabilidad": 0.738,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.5238,
-      "probabilidad": 0.7283,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.875,
-      "probabilidad": 0.5904,
+      "ocupacion_real": 0.9048,
+      "probabilidad": 0.6122,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.5455,
-      "probabilidad": 0.0234,
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.0151,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.8864,
-      "probabilidad": 0.5563,
+      "ocupacion_real": 0.8182,
+      "probabilidad": 0.6342,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.625,
-      "probabilidad": 0.5302,
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0147,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.6111,
-      "probabilidad": 0.0264,
+      "ocupacion_real": 0.8542,
+      "probabilidad": 0.692,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6087,
+      "probabilidad": 0.0678,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0101,
+      "ocupacion_real": 0.825,
+      "probabilidad": 0.6353,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0062,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0101,
+      "ocupacion_real": 0.5278,
+      "probabilidad": 0.0249,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.475,
-      "probabilidad": 0.0255,
+      "ocupacion_real": 0.7381,
+      "probabilidad": 0.4678,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0039,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.8095,
-      "probabilidad": 0.38,
+      "ocupacion_real": 0.8409,
+      "probabilidad": 0.4948,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.65,
+      "probabilidad": 0.0443,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3636,
+      "probabilidad": 0.0094,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.75,
+      "probabilidad": 0.1849,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.575,
+      "probabilidad": 0.1418,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0374,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6,
+      "probabilidad": 0.0218,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6087,
+      "probabilidad": 0.586,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5833,
+      "probabilidad": 0.2461,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4091,
+      "probabilidad": 0.0784,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.7992,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8333,
+      "probabilidad": 0.8265,
       "alta_real": 1
     },
     {
       "ocupacion_real": 0.5,
-      "probabilidad": 0.0138,
+      "probabilidad": 0.2075,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.6,
-      "probabilidad": 0.0216,
+      "ocupacion_real": 0.7727,
+      "probabilidad": 0.7445,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0154,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5333,
+      "probabilidad": 0.0154,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.6667,
-      "probabilidad": 0.0127,
+      "probabilidad": 0.7262,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.6136,
-      "probabilidad": 0.4102,
+      "ocupacion_real": 0.5652,
+      "probabilidad": 0.0923,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.6,
-      "probabilidad": 0.0194,
+      "ocupacion_real": 0.6875,
+      "probabilidad": 0.7906,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.775,
+      "probabilidad": 0.7351,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7619,
+      "probabilidad": 0.436,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0041,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6591,
+      "probabilidad": 0.4966,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7,
+      "probabilidad": 0.0391,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0058,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4722,
+      "probabilidad": 0.0251,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4545,
+      "probabilidad": 0.0087,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0305,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5,
+      "probabilidad": 0.0195,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.475,
-      "probabilidad": 0.5757,
+      "probabilidad": 0.1141,
       "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4565,
+      "probabilidad": 0.0156,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.3333,
+      "probabilidad": 0.0032,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0045,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.9286,
+      "probabilidad": 0.8491,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.8125,
+      "probabilidad": 0.8593,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.55,
+      "probabilidad": 0.2538,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.6111,
+      "probabilidad": 0.3048,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.5455,
+      "probabilidad": 0.094,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.75,
+      "probabilidad": 0.7652,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0141,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.825,
+      "probabilidad": 0.7428,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0141,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.7381,
+      "probabilidad": 0.7524,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.7917,
+      "probabilidad": 0.823,
+      "alta_real": 1
+    },
+    {
+      "ocupacion_real": 0.6304,
+      "probabilidad": 0.0819,
+      "alta_real": 0
+    },
+    {
+      "ocupacion_real": 0.725,
+      "probabilidad": 0.4335,
+      "alta_real": 1
     },
     {
       "ocupacion_real": 0.4667,
-      "probabilidad": 0.0234,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.7708,
-      "probabilidad": 0.8814,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.8,
-      "probabilidad": 0.2779,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.5217,
-      "probabilidad": 0.0973,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.9048,
-      "probabilidad": 0.8099,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.6667,
-      "probabilidad": 0.1483,
+      "probabilidad": 0.0041,
       "alta_real": 0
     },
     {
       "ocupacion_real": 0.7273,
-      "probabilidad": 0.5325,
+      "probabilidad": 0.5067,
       "alta_real": 1
     },
     {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0106,
+      "ocupacion_real": 0.4167,
+      "probabilidad": 0.0261,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.825,
-      "probabilidad": 0.6437,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0106,
+      "ocupacion_real": 0.575,
+      "probabilidad": 0.0403,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.4773,
-      "probabilidad": 0.0417,
+      "ocupacion_real": 0.4,
+      "probabilidad": 0.0058,
       "alta_real": 0
     },
     {
-      "ocupacion_real": 0.7917,
-      "probabilidad": 0.7773,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 1.0,
-      "probabilidad": 0.7211,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.4667,
-      "probabilidad": 0.0073,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.3333,
-      "probabilidad": 0.0073,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.825,
-      "probabilidad": 0.3742,
-      "alta_real": 1
-    },
-    {
-      "ocupacion_real": 0.3889,
-      "probabilidad": 0.0187,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6136,
-      "probabilidad": 0.2967,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.6,
-      "probabilidad": 0.0189,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.0682,
-      "probabilidad": 0.1138,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.0,
-      "probabilidad": 0.7803,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.0,
-      "probabilidad": 0.664,
-      "alta_real": 0
-    },
-    {
-      "ocupacion_real": 0.1818,
-      "probabilidad": 0.7385,
+      "ocupacion_real": 0.5227,
+      "probabilidad": 0.0089,
       "alta_real": 0
     }
   ],
@@ -2106,7 +2097,6 @@
     "distancia_km",
     "hora_salida_decimal",
     "precio_pasaje",
-    "capacidad_asientos",
-    "clima"
+    "capacidad_asientos"
   ]
 }

@@ -107,15 +107,6 @@
         });
     }
 
-    function gClima(datos) {
-        if (!vacio('g-clima', datos.length)) return;
-        dibujar('g-clima', {
-            type: 'bar',
-            data: { labels: datos.map((d) => cap(d.clima)), datasets: [{ label: 'Retraso promedio (min)', data: datos.map((d) => d.retraso), backgroundColor: PALETA[1], borderRadius: 3 }] },
-            options: { ...BASE, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos' } } } },
-        });
-    }
-
     function gEdad(datos) {
         if (!vacio('g-edad', datos.length)) return;
         dibujar('g-edad', {
@@ -177,7 +168,6 @@
             gEstado(d.estado_flota);
             gSemana(d.semana);
             gRutas(d.rutas);
-            gClima(d.clima);
             gEdad(d.edad);
             gPagos(d.pagos);
             tFlota(d.flota);

@@ -53,10 +53,6 @@
                         <div class="fw-bold text-success">S/ {{ "%.2f"|format(v.precio_pasaje) }}</div>
                     </div>
                     <div class="col-4">
-                        <div class="text-muted">Clima</div>
-                        <div class="fw-bold">{{ v.clima or '-' }}</div>
-                    </div>
-                    <div class="col-4">
                         <div class="text-muted">Feriado</div>
                         <div class="fw-bold">{{ 'Sí' if v.es_feriado else 'No' }}</div>
                     </div>

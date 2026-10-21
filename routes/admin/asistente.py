@@ -2,13 +2,15 @@
 from flask import Blueprint, jsonify, render_template, request, session
 
 from asistente.orquestador import LIMITE_USUARIO_DIA, MAX_PREGUNTA, responder
+from asistente.registro import TODOS
 
 asistente_bp = Blueprint('asistente', __name__, url_prefix='/admin/asistente')
 
 
 @asistente_bp.route('/')
 def index():
-    return render_template('admin/asistente.html', max_pregunta=MAX_PREGUNTA, limite=LIMITE_USUARIO_DIA)
+    return render_template('admin/asistente.html', max_pregunta=MAX_PREGUNTA,
+                           limite=LIMITE_USUARIO_DIA, agentes=TODOS)
 
 
 @asistente_bp.route('/preguntar', methods=['POST'])

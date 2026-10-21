@@ -3,107 +3,207 @@
 
 {% block content %}
 {% set grupos = {
-  'Datos': ['¿Cuántos pasajeros hubo en los últimos 30 días?',
-            '¿Qué ruta se llenó más en 30 días?',
-            '¿Cómo afecta el clima al retraso de los viajes?'],
-  'Predicción': ['¿Se llenará el bus a Lima el viernes a las 20:00?',
-                 '¿Cuál es la probabilidad de que se llenen los próximos viajes?',
-                 '¿Y a Tarma el martes a las 08:00?'],
-  'Operación': ['¿Hay alertas de operación?',
-                '¿Cuántos buses están en mantenimiento?',
-                '¿Hay licencias de conductor por vencer?'],
-  'Consejos': ['¿Qué me recomiendas hacer esta semana?',
-               '¿Hay algún bus con problemas y qué hago?',
-               '¿Qué viajes necesitan una promoción?']
+  'Datos': [
+    '¿Cuántos pasajeros hubo en los últimos 30 días?',
+    '¿Qué ruta se llenó más en 30 días?',
+  ],
+  'Predicción': [
+    '¿Se llenará el bus a Lima el viernes a las 20:00?',
+    '¿Cuál es la probabilidad de que se llenen los próximos viajes?',
+    '¿Y a Tarma el martes a las 08:00?'
+  ],
+  'Operación': [
+    '¿Hay alertas de operación?',
+    '¿Cuántos buses están en mantenimiento?',
+    '¿Hay licencias de conductor por vencer?'
+  ],
+  'Consejos': [
+    '¿Qué me recomiendas hacer esta semana?',
+    '¿Hay algún bus con problemas y qué hago?',
+    '¿Qué viajes necesitan una promoción?'
+  ]
 } %}
 
 <div class="mx-auto" style="max-width:820px">
+    <!-- Encabezado -->
     <div class="mb-3">
-        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-stars text-warning me-2"></i>Asistente IA</h3>
+        <h3 class="fw-bold text-dark mb-1">
+            <i class="bi bi-stars text-warning me-2"></i>Asistente IA
+        </h3>
         <p class="text-muted small mb-0">Consulta ventas, predicciones y recomendaciones en lenguaje natural.</p>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <div id="chat" style="height:340px;overflow-y:auto" class="mb-3">
-                <div id="vacio" class="text-center text-muted mt-4">
-                    <i class="bi bi-chat-dots fs-2 d-block mb-2"></i>
-                    <div class="mb-3">¿Qué quieres saber?</div>
+    <!-- Navegación por pestañas principales -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-chat" type="button">
+                <i class="bi bi-chat-dots me-1"></i>Chat
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-agentes" type="button">
+                <i class="bi bi-robot me-1"></i>Cómo funciona
+            </button>
+        </li>
+    </ul>
 
-                    <ul class="nav nav-pills justify-content-center gap-1 mb-3 small" id="tabs">
-                        {% for nombre in grupos %}
-                        <li class="nav-item">
-                            <button type="button" class="nav-link py-1 px-3 {{ 'active' if loop.first }}"
-                                    data-grupo="{{ loop.index0 }}">{{ nombre }}</button>
-                        </li>
-                        {% endfor %}
-                    </ul>
+    <!-- Contenido de las pestañas -->
+    <div class="tab-content">
+        <!-- Pestaña 1: Chat -->
+        <div class="tab-pane fade show active" id="tab-chat">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div id="chat" style="height:340px;overflow-y:auto" class="mb-3">
+                        <div id="vacio" class="text-center text-muted mt-4">
+                            <i class="bi bi-chat-dots fs-2 d-block mb-2"></i>
+                            <div class="mb-3">¿Qué quieres saber?</div>
 
-                    {% for nombre, ejemplos in grupos.items() %}
-                    <div class="grupo d-flex flex-column align-items-center gap-2 {{ '' if loop.first else 'd-none' }}"
-                         data-grupo="{{ loop.index0 }}">
-                        {% for e in ejemplos %}
-                        <button type="button" class="btn btn-sm btn-outline-secondary ejemplo">{{ e }}</button>
-                        {% endfor %}
+                            <!-- Pestañas de sugerencias -->
+                            <ul class="nav nav-pills justify-content-center gap-1 mb-3 small" id="tabs">
+                                {% for nombre in grupos %}
+                                <li class="nav-item">
+                                    <button type="button" class="nav-link py-1 px-3 {{ 'active' if loop.first }}" data-grupo="{{ loop.index0 }}">
+                                        {{ nombre }}
+                                    </button>
+                                </li>
+                                {% endfor %}
+                            </ul>
+
+                            <!-- Ejemplos por grupo -->
+                            {% for nombre, ejemplos in grupos.items() %}
+                            <div class="grupo d-flex flex-column align-items-center gap-2 {{ '' if loop.first else 'd-none' }}" data-grupo="{{ loop.index0 }}">
+                                {% for e in ejemplos %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary ejemplo">{{ e }}</button>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    {% endfor %}
+
+                    <!-- Formulario de entrada -->
+                    <form id="f" class="d-flex gap-2">
+                        <input id="q" class="form-control" maxlength="{{ max_pregunta }}" placeholder="Escribe tu pregunta..." required autocomplete="off">
+                        <button id="b" class="btn btn-dark">
+                            <i class="bi bi-send text-warning"></i>
+                        </button>
+                    </form>
+                    <div class="text-muted mt-2" style="font-size:.75rem">
+                        Indica periodo, ruta u hora para mejores respuestas. Solo consulta datos, no modifica nada.
+                        Máx. {{ limite }} preguntas por día.
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <form id="f" class="d-flex gap-2">
-                <input id="q" class="form-control" maxlength="{{ max_pregunta }}"
-                       placeholder="Escribe tu pregunta..." required autocomplete="off">
-                <button id="b" class="btn btn-dark"><i class="bi bi-send text-warning"></i></button>
-            </form>
-            <div class="text-muted mt-2" style="font-size:.75rem">
-                Indica periodo, ruta u hora para mejores respuestas. Solo consulta datos, no modifica nada.
-                Máx. {{ limite }} preguntas por día.
+        <!-- Pestaña 2: Información de Agentes -->
+        <div class="tab-pane fade" id="tab-agentes">
+            <p class="text-muted small">
+                Cinco agentes colaboran mediante una pizarra compartida y usan el mismo LLM.
+                El orquestador decide quién interviene y el auditor verifica las cifras antes de responder.
+            </p>
+            <div class="row g-3">
+                {% for a in agentes %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <strong>{{ loop.index }}. {{ a.nombre }}</strong>
+                                <span class="badge bg-secondary text-wrap text-end">{{ a.tipo }}</span>
+                            </div>
+                            <ol class="small text-muted ps-3 mt-2 mb-0">
+                                {% for p in a.libreto %}
+                                <li>{{ p }}</li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="alert alert-light border small mt-3 mb-0">
+                <i class="bi bi-arrow-repeat text-warning me-1"></i>
+                Además, el sistema ejecuta de forma automática dos tareas: sincronizar el estado de los viajes
+                (cada 15 minutos) y una rutina diaria en la que los agentes generan un informe de operación.
             </div>
         </div>
     </div>
 </div>
 
 <script>
-const chat = document.getElementById('chat'), q = document.getElementById('q'), b = document.getElementById('b');
+const chat = document.getElementById('chat'), 
+      q = document.getElementById('q'), 
+      b = document.getElementById('b');
 
 function burbuja(texto, quien, pie) {
-    const v = document.getElementById('vacio'); if (v) v.remove();
+    const v = document.getElementById('vacio'); 
+    if (v) v.remove();
+
     const d = document.createElement('div');
     d.className = 'mb-3 d-flex ' + (quien === 'yo' ? 'justify-content-end' : '');
+
     const c = document.createElement('div');
     c.className = 'p-2 px-3 rounded-3 ' + (quien === 'yo' ? 'bg-warning' : (quien === 'err' ? 'bg-danger-subtle' : 'bg-light border'));
     c.style.cssText = 'max-width:80%;white-space:pre-wrap';
     c.textContent = texto;
-    if (pie) { const s = document.createElement('div'); s.className = 'text-muted'; s.style.fontSize = '.7rem'; s.textContent = pie; c.appendChild(s); }
-    d.appendChild(c); chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+
+    if (pie) { 
+        const s = document.createElement('div'); 
+        s.className = 'text-muted'; 
+        s.style.fontSize = '.7rem'; 
+        s.textContent = pie; 
+        c.appendChild(s); 
+    }
+
+    d.appendChild(c); 
+    chat.appendChild(d); 
+    chat.scrollTop = chat.scrollHeight;
     return d;
 }
 
 async function preguntar(texto) {
-    burbuja(texto, 'yo'); q.value = ''; b.disabled = true;
+    burbuja(texto, 'yo'); 
+    q.value = ''; 
+    b.disabled = true;
+
     const espera = burbuja('Pensando...', 'bot');
     try {
         const r = await fetch("{{ url_for('asistente.preguntar') }}", {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pregunta: texto }) });
-        const d = await r.json(); espera.remove();
-        if (d.error) burbuja(d.error, 'err');
-        else burbuja(d.respuesta, 'bot', `${d.agente} · ${d.cache ? 'respuesta en caché' : d.tokens + ' tokens'}`);
-    } catch (e) { espera.remove(); burbuja('No se pudo conectar con el servidor.', 'err'); }
-    b.disabled = false; q.focus();
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pregunta: texto }) 
+        });
+        const d = await r.json(); 
+        espera.remove();
+
+        if (d.error) {
+            burbuja(d.error, 'err');
+        } else {
+            burbuja(d.respuesta, 'bot', `${d.agente} · ${d.cache ? 'respuesta en caché' : d.tokens + ' tokens'}`);
+        }
+    } catch (e) { 
+        espera.remove(); 
+        burbuja('No se pudo conectar con el servidor.', 'err'); 
+    }
+    b.disabled = false; 
+    q.focus();
 }
 
 // Pestañas de ejemplos
-document.querySelectorAll('#tabs .nav-link').forEach(t => t.onclick = () => {
-    document.querySelectorAll('#tabs .nav-link').forEach(x => x.classList.toggle('active', x === t));
-    document.querySelectorAll('.grupo').forEach(g => g.classList.toggle('d-none', g.dataset.grupo !== t.dataset.grupo));
+document.querySelectorAll('#tabs .nav-link').forEach(t => {
+    t.onclick = () => {
+        document.querySelectorAll('#tabs .nav-link').forEach(x => x.classList.toggle('active', x === t));
+        document.querySelectorAll('.grupo').forEach(g => g.classList.toggle('d-none', g.dataset.grupo !== t.dataset.grupo));
+    };
 });
 
-document.querySelectorAll('.ejemplo').forEach(e => e.onclick = () => { if (!b.disabled) preguntar(e.textContent.trim()); });
+document.querySelectorAll('.ejemplo').forEach(e => {
+    e.onclick = () => { if (!b.disabled) preguntar(e.textContent.trim()); };
+});
 
 document.getElementById('f').addEventListener('submit', ev => {
     ev.preventDefault();
-    const t = q.value.trim(); if (t) preguntar(t);
+    const t = q.value.trim(); 
+    if (t) preguntar(t);
 });
 </script>
 {% endblock %}

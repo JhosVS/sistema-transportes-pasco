@@ -2,6 +2,8 @@
 {% block title %}Horarios Recurrentes{% endblock %}
 
 {% block content %}
+{% set dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] %}
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="m-0 fw-bold"><i class="bi bi-clock-history"></i> Horarios Recurrentes Configurados</h4>
     <a href="{{ url_for('admin_viajes.crear', c='1' if is_collapsed else None) }}" class="btn btn-sm btn-primary">
@@ -9,105 +11,82 @@
     </a>
 </div>
 
+<!-- Estructura Unificada de Cuadro de Horarios -->
 <div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark-custom">
+    <div class="table-responsive" style="max-height: 80vh; overflow-y: auto;">
+        <table class="table table-bordered mb-0 align-middle text-center" style="table-layout: fixed; min-width: 900px;">
+            <!-- Encabezado Único con la Columna de Horas a la Izquierda y luego los Días -->
+            <thead class="table-dark sticky-top">
                 <tr>
-                    <th>Día</th>
-                    <th>Hora</th>
-                    <th>Ruta Interprovincial</th>
-                    <th>Vehículo Predeterminado</th>
-                    <th>Conductor Predeterminado</th>
-                    <th>Pasaje Base</th>
-                    <th>Carga / Kg</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acciones</th>
+                    <th style="width: 6.5%;" class="bg-secondary text-white"><i class="bi bi-clock"></i></th>
+                    {% for dia in dias_semana %}
+                    <th style="width: 13.3%;">{{ dia }}</th>
+                    {% endfor %}
                 </tr>
             </thead>
             <tbody>
-                {% for h in horarios %}
+                <!-- Bucle para recorrer las 24 horas del día (00:00 a 23:00) -->
+                {% for hora in range(0, 24) %}
+                {% set hora_formato = "%02d:00" | format(hora) %}
                 <tr>
-                    <td class="fw-bold text-primary">{{ h.dia_semana }}</td>
-
-                    <td>
-                        <span class="badge bg-light text-dark border font-monospace fs-6">
-                            <i class="bi bi-clock"></i> {{ h.hora_salida.strftime('%H:%M') if h.hora_salida else '-' }}
-                        </span>
+                    <!-- Columna Fija a la Izquierda con las Horas -->
+                    <td class="bg-dark-subtle fw-bold text-muted small py-2 font-monospace align-middle">
+                        {{ hora_formato }}
                     </td>
 
-                    <td>
-                        {% if h.ruta %}
-                        <strong>{{ h.ruta.origen.ciudad }}</strong> ➔ <strong>{{ h.ruta.destino.ciudad }}</strong>
-                        <br><small class="text-muted">{{ h.ruta.origen.nombre_sede }} ➔ {{ h.ruta.destino.nombre_sede
-                            }}</small>
-                        {% else %}
-                        <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
+                    <!-- Columnas de Lunes a Domingo para la hora actual -->
+                    {% for dia in dias_semana %}
+                    <td class="p-1 align-top bg-light-subtle" style="height: 65px; vertical-align: top !important;">
+                        
+                        {# Filtramos las salidas para este día cuya hora de salida coincida con la hora del bloque #}
+                        {% for h in horarios %}
+                            {% if h.dia_semana == dia and h.hora_salida and h.hora_salida.hour == hora %}
+                            <div class="card border-0 shadow-sm p-1 mb-1 text-start {{ 'opacity-50 bg-secondary-subtle' if h.estado != 'Activo' else 'bg-white border-start border-4 border-primary' }}" style="font-size: 0.75rem;">
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-primary font-monospace" style="font-size: 0.8rem;">
+                                        {{ h.hora_salida.strftime('%H:%M') }}
+                                    </span>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ url_for('admin_viajes.editar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}" 
+                                           class="text-warning p-0" title="Editar"><i class="bi bi-pencil-fill"></i></a>
+                                        
+                                        {% if h.estado == 'Activo' %}
+                                        <form action="{{ url_for('admin_viajes.eliminar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}" 
+                                              method="POST" class="d-inline" onsubmit="return confirm('¿Desactivar este horario?');">
+                                            <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Desactivar"><i class="bi bi-slash-circle-fill"></i></button>
+                                        </form>
+                                        {% else %}
+                                        <form action="{{ url_for('admin_viajes.activar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}" 
+                                              method="POST" class="d-inline" onsubmit="return confirm('¿Activar este horario?');">
+                                            <button type="submit" class="btn btn-link text-success p-0 border-0" title="Activar"><i class="bi bi-check-circle-fill"></i></button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
 
-                    <td>
-                        {% if h.vehiculo_default %}
-                        <code>{{ h.vehiculo_default.placa }}</code>
-                        <small class="text-muted">({{ h.vehiculo_default.marca }} {{ h.vehiculo_default.modelo
-                            }})</small>
-                        {% else %}
-                        <span class="text-muted small"><em>Por asignar en viaje</em></span>
-                        {% endif %}
-                    </td>
+                                <div class="fw-bold text-dark text-truncate" title="{{ h.ruta.origen.ciudad if h.ruta else '' }} -> {{ h.ruta.destino.ciudad if h.ruta else '' }}">
+                                    {% if h.ruta %}
+                                        {{ h.ruta.origen.ciudad }} ➔ {{ h.ruta.destino.ciudad }}
+                                    {% else %}
+                                        <span class="text-muted">Sin Ruta</span>
+                                    {% endif %}
+                                </div>
 
-                    <td>
-                        {% if h.conductor_default %}
-                        {{ h.conductor_default.nombre_completo }}
-                        {% else %}
-                        <span class="text-muted small"><em>Por asignar en viaje</em></span>
-                        {% endif %}
-                    </td>
+                                <div class="text-muted text-truncate" style="font-size: 0.7rem;">
+                                    <i class="bi bi-bus-front"></i> {{ h.vehiculo_default.placa if h.vehiculo_default else 'Sin Bus' }}
+                                </div>
 
-                    <td class="fw-bold text-success">
-                        S/ {{ "%.2f"|format(h.precio_pasaje_base) }}
-                    </td>
+                                <div class="fw-semibold text-success mt-1">
+                                    S/ {{ "%.2f"|format(h.precio_pasaje_base) }}
+                                </div>
 
-                    <td class="small">
-                        S/ {{ "%.2f"|format(h.precio_kg_carga_base) }} / kg
-                    </td>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
 
-                    <td>
-                        {% if h.estado == 'Activo' %}
-                        <span class="badge bg-success">Activo</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Inactivo</span>
-                        {% endif %}
                     </td>
-
-                    <td class="text-end">
-                        <a href="{{ url_for('admin_viajes.editar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}"
-                            class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        {% if h.estado == 'Activo' %}
-                        <form
-                            action="{{ url_for('admin_viajes.eliminar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}"
-                            method="POST" class="d-inline" onsubmit="return confirm('¿Desactivar este horario?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </form>
-                        {% else %}
-                        <form
-                            action="{{ url_for('admin_viajes.activar', id_horario=h.id_horario, c='1' if is_collapsed else None) }}"
-                            method="POST" class="d-inline" onsubmit="return confirm('¿Activar este horario?');">
-                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activar">
-                                <i class="bi bi-check-circle"></i>
-                            </button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="9" class="text-center text-muted py-3">Sin horarios recurrentes registrados.</td>
+                    {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>

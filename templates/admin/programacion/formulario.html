@@ -6,7 +6,6 @@
 {% set programado = v.estado_viaje == 'Programado' %}
 {% set sel_veh = (form.get('id_vehiculo') if form and 'id_vehiculo' in form else (v.id_vehiculo or '')) | string %}
 {% set sel_cond = (form.get('id_conductor') if form and 'id_conductor' in form else (v.id_conductor or '')) | string %}
-{% set sel_clima = form.get('clima') if form and 'clima' in form else (v.clima or '') %}
 {% set feriado_marcado = (form.get('es_feriado') == '1') if form else v.es_feriado %}
 
 <div class="container py-4" style="max-width: 700px;">
@@ -55,13 +54,6 @@
                 {% endif %}
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label small fw-semibold text-muted">CLIMA</label>
-                        <input type="text" name="clima" class="form-control" maxlength="30" list="lista_climas" value="{{ sel_clima }}">
-                        <datalist id="lista_climas">
-                            {% for c in climas %}<option value="{{ c }}">{% endfor %}
-                        </datalist>
-                    </div>
                     <div class="col-md-6 mb-3 d-flex align-items-end">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="es_feriado" value="1" id="es_feriado"

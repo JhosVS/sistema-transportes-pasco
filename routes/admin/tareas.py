@@ -11,11 +11,6 @@ tareas_bp = Blueprint('tareas', __name__)
 TAREAS = {'sincronizar': o.sincronizar, 'rutina': o.rutina_diaria}
 
 
-@tareas_bp.route('/admin/tareas')
-def index():
-    return render_template('admin/tareas.html', agentes=TODOS, registro=o.ultimos())
-
-
 @tareas_bp.route('/admin/tareas/ejecutar/<tarea>', methods=['POST'])
 def ejecutar(tarea):
     if tarea not in TAREAS:

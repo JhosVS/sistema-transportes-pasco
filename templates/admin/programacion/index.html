@@ -11,7 +11,8 @@
         <span class="badge bg-{{ colores[est] }}">{{ est }}: {{ conteo.get(est, 0) }}</span>
         {% endfor %}
         <form action="{{ url_for('programacion.marcar_feriados') }}" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marca los viajes programados que caen en feriado nacional">
+            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                title="Marca los viajes programados que caen en feriado nacional">
                 <i class="bi bi-calendar-event me-1"></i> Actualizar feriados
             </button>
         </form>
@@ -22,12 +23,12 @@
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small fw-semibold text-muted">ESTADO</label>
                 <select name="estado" class="form-select form-select-sm">
                     <option value="">Todos</option>
                     {% for est in estados %}
-                    <option value="{{ est }}" {% if estado_sel == est %}selected{% endif %}>{{ est }}</option>
+                    <option value="{{ est }}" {% if estado_sel==est %}selected{% endif %}>{{ est }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -36,19 +37,15 @@
                 <select name="id_vehiculo" class="form-select form-select-sm">
                     <option value="">Todos</option>
                     {% for veh in vehiculos %}
-                    <option value="{{ veh.id_vehiculo }}" {% if id_vehiculo_sel == veh.id_vehiculo %}selected{% endif %}>
+                    <option value="{{ veh.id_vehiculo }}" {% if id_vehiculo_sel==veh.id_vehiculo %}selected{% endif %}>
                         {{ veh.placa }} ({{ veh.marca }} {{ veh.modelo }})
                     </option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold text-muted">DESDE</label>
-                <input type="date" name="desde" class="form-control form-control-sm" value="{{ desde }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold text-muted">HASTA</label>
-                <input type="date" name="hasta" class="form-control form-control-sm" value="{{ hasta }}">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">MES</label>
+                <input type="month" name="mes" class="form-control form-control-sm" value="{{ mes_sel }}">
             </div>
             <div class="col-md-2 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel"></i> Filtrar</button>
@@ -84,13 +81,15 @@
                 <tr>
                     <td>
                         <strong>{{ p.salida_programada.strftime('%d/%m/%Y') }}</strong>
-                        <br><small class="text-muted">{{ p.salida_programada.strftime('%H:%M') }} hrs · #{{ p.id_viaje }}</small>
+                        <br><small class="text-muted">{{ p.salida_programada.strftime('%H:%M') }} hrs · #{{ p.id_viaje
+                            }}</small>
                     </td>
                     <td>
                         <strong>{{ ruta.origen.ciudad }}</strong> ➔ <strong>{{ ruta.destino.ciudad }}</strong>
                     </td>
                     <td>
-                        {% if veh %}<code>{{ veh.placa }}</code>{% else %}<span class="text-muted small">Sin bus</span>{% endif %}
+                        {% if veh %}<code>{{ veh.placa }}</code>{% else %}<span class="text-muted small">Sin
+                            bus</span>{% endif %}
                     </td>
                     <td class="small">{{ cond.nombre_completo if cond else 'Por asignar' }}</td>
                     <td>
@@ -99,20 +98,21 @@
                     <td><span class="badge bg-{{ colores[p.estado_viaje] }}">{{ p.estado_viaje }}</span></td>
                     <td>
                         {% if retraso is not none %}
-                            {% if retraso > 0 %}
-                            <span class="badge bg-warning text-dark">+{{ retraso }} min</span>
-                            {% else %}
-                            <span class="small text-success">A tiempo</span>
-                            {% endif %}
+                        {% if retraso > 0 %}
+                        <span class="badge bg-warning text-dark">+{{ retraso }} min</span>
+                        {% else %}
+                        <span class="small text-success">A tiempo</span>
+                        {% endif %}
                         {% else %}
                         <span class="text-muted">-</span>
                         {% endif %}
                     </td>
                     <td class="text-end">
                         <a href="{{ url_for('programacion.detalle', id_viaje=p.id_viaje) }}"
-                           class="btn btn-sm btn-outline-secondary me-1" title="Ver detalle"><i class="bi bi-eye"></i></a>
+                            class="btn btn-sm btn-outline-secondary me-1" title="Ver detalle"><i
+                                class="bi bi-eye"></i></a>
                         <a href="{{ url_for('programacion.editar', id_viaje=p.id_viaje) }}"
-                           class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></a>
+                            class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></a>
                     </td>
                 </tr>
                 {% else %}

@@ -121,15 +121,6 @@ def ocupacion_por_dia_semana(dias: int = 90) -> list:
 
 
 @segura
-def retraso_por_clima(dias: int = 180) -> list:
-    """Retraso promedio de llegada en minutos según el clima, en los últimos N días."""
-    return [{"clima": r["clima"] or "sin dato", "retraso_prom_min": float(r["r"]), "viajes": int(r["n"])}
-            for r in _q("""SELECT clima, ROUND(AVG(minutos_retraso_llegada),1) r, COUNT(*) n FROM v_viajes
-                           WHERE estado_viaje='Finalizado' AND minutos_retraso_llegada IS NOT NULL
-                             AND salida_programada >= :d GROUP BY clima""", d=_desde(dias))]
-
-
-@segura
 def estado_flota() -> dict:
     """Cantidad de vehículos por estado (Disponible, Mantenimiento, Baja)."""
     return {r["estado"]: int(r["n"]) for r in
@@ -165,9 +156,9 @@ def listar_rutas() -> list:
 
 
 @segura
-def predecir_viaje(id_ruta: int, fecha: str, hora: str, clima: str = "despejado") -> dict:
-    """Probabilidad (%) de que un viaje de UNA ruta tenga alta ocupación (70% o más de asientos).
-    fecha en formato AAAA-MM-DD, hora en HH:MM, clima: despejado, neblina, lluvia o granizo."""
+def predecir_viaje(id_ruta: int, fecha: str, hora: str) -> dict:
+    """Probabilidad (%) de alta demanda (70% o más de asientos vendidos) para un viaje de UNA ruta.
+    fecha en formato AAAA-MM-DD y hora en HH:MM."""
     from routes.admin.predicciones import _capacidad_ruta, _cargar, _fila, _probabilidades
     modelo, _ = _cargar()
     if not modelo:
@@ -180,7 +171,7 @@ def predecir_viaje(id_ruta: int, fecha: str, hora: str, clima: str = "despejado"
         hh, mm = [int(x) for x in hora.split(":")[:2]]
     except (ValueError, AttributeError):
         return {"error": "Fecha u hora con formato inválido."}
-    fila = _fila(ruta, f, hh + mm / 60, clima, _capacidad_ruta(ruta.id_ruta))
+    fila = _fila(ruta, f, hh + mm / 60, _capacidad_ruta(ruta.id_ruta))
     prob = float(_probabilidades(modelo, [fila])[0])
     return {"id_ruta": ruta.id_ruta, "probabilidad_alta_ocupacion_pct": round(prob * 100, 1),
             "feriado": bool(fila["es_feriado"]), "vispera_feriado": bool(fila["es_vispera"])}
@@ -194,14 +185,14 @@ def proximos_viajes(limite: int = 5) -> list:
 
 
 @segura
-def prediccion_ruta_top(fecha: str, hora: str = "20:00", clima: str = "despejado") -> dict:
+def prediccion_ruta_top(fecha: str, hora: str = "20:00") -> dict:
     """SOLO para '¿cuál es la ruta más concurrida y su probabilidad de llenarse?'. Predice únicamente
     la ruta con más pasajeros de los últimos 30 días. Para cualquier otra ruta (Tarma, Huancayo,
     Huánuco...) NO la uses: usa listar_rutas y predecir_viaje."""
     top = _top(30, 1)
     if not top:
         return {"error": "No hay datos de rutas."}
-    p = predecir_viaje(int(top[0]["id_ruta"]), fecha, hora, clima)
+    p = predecir_viaje(int(top[0]["id_ruta"]), fecha, hora)
     return {"ruta": top[0]["ruta"], "pasajeros_30_dias": int(top[0]["pas"]), **p}
 
 # ------------------------- RECOMENDACIONES -------------------------
@@ -285,3 +276,22 @@ def estado_modelo() -> dict:
     return {"algoritmo": m["modelo"], "entrenado_el": m["entrenado_en"][:10],
             "dias_desde_entrenamiento": dias, "auc_prueba": m["metricas_prueba"]["roc_auc"],
             "viajes_nuevos": nuevos, "conviene_reentrenar": bool(nuevos >= 50 or dias > 30)}
+
+@segura
+def demanda_por_dia_semana(id_ruta: int) -> dict:
+    """Probabilidad promedio (%) de alta ocupación por día de la semana para UNA ruta, según el modelo,
+    proyectada sobre las próximas 4 semanas. Indica qué días tienen más y menos demanda."""
+    from routes.admin.predicciones import _nombre_ruta, proyectar_ruta
+    ruta = db.session.get(Ruta, int(id_ruta))
+    if not ruta:
+        return {"error": "La ruta no existe. Usa listar_rutas."}
+    hoy = date.today()
+    por_dia = {}
+    for iso, x in proyectar_ruta(ruta, hoy, hoy + timedelta(days=27)).items():
+        if x["max"] is not None:
+            por_dia.setdefault(datetime.strptime(iso, "%Y-%m-%d").weekday(), []).append(x["max"])
+    if not por_dia:
+        return {"error": "Esta ruta no tiene salidas en su horario."}
+    return {"ruta": _nombre_ruta(ruta),
+            "dias": [{"dia": DIAS[d], "prob_alta_ocupacion_pct": round(sum(v) / len(v), 1)}
+                     for d, v in sorted(por_dia.items())]}

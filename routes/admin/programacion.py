@@ -12,7 +12,6 @@ programacion_bp = Blueprint('programacion', __name__, url_prefix='/admin/program
 
 ESTADOS = ('Programado', 'En Ruta', 'Finalizado', 'Cancelado')
 FORMATO_DT = '%Y-%m-%dT%H:%M'
-CLIMAS = ('Despejado', 'Nublado', 'Lluvia', 'Neblina', 'Nevada', 'Granizo')
 
 
 # ============================================================
@@ -50,7 +49,6 @@ def _leer_formulario(form, viaje):
                         f'El vehículo {veh.placa} tiene {veh.capacidad_asientos} asientos, pero el viaje '
                         f'ya tiene {len(activos)} pasajes (asiento más alto: {mayor_asiento}).')
 
-    datos['clima'] = form.get('clima', '').strip()[:30] or None
     datos['es_feriado'] = form.get('es_feriado') == '1'
 
     # Horas reales (se llenan solas; aquí solo se corrigen)
@@ -91,6 +89,8 @@ def _advertencias(viaje, id_vehiculo, id_conductor):
                           f'{cond.licencia_vence.strftime("%d/%m/%Y")}, antes de la salida.')
     return avisos
 
+import calendar
+from datetime import datetime
 
 # ============================================================
 # 1. LISTAR
@@ -101,21 +101,33 @@ def index():
 
     estado = request.args.get('estado', '').strip()
     id_vehiculo = request.args.get('id_vehiculo', type=int)
-    desde_str = request.args.get('desde', '').strip()
-    hasta_str = request.args.get('hasta', '').strip()
+    mes_str = request.args.get('mes', '').strip()  # Recibe "YYYY-MM" (ejemplo: "2026-03")
 
     query = ProgramacionViaje.query
+
     if estado in ESTADOS:
         query = query.filter(ProgramacionViaje.estado_viaje == estado)
+        
     if id_vehiculo:
         query = query.filter(ProgramacionViaje.id_vehiculo == id_vehiculo)
-    try:
-        if desde_str:
-            query = query.filter(ProgramacionViaje.fecha_salida >= datetime.strptime(desde_str, '%Y-%m-%d').date())
-        if hasta_str:
-            query = query.filter(ProgramacionViaje.fecha_salida <= datetime.strptime(hasta_str, '%Y-%m-%d').date())
-    except ValueError:
-        flash('Fecha de filtro inválida.', 'warning')
+
+    # Filtrado por Mes y Año
+    if mes_str:
+        try:
+            anyo, mes = map(int, mes_str.split('-'))
+            
+            # Calcular el primer y último día del mes
+            primer_dia = datetime(anyo, mes, 1).date()
+            ultimo_dia_num = calendar.monthrange(anyo, mes)[1]
+            ultimo_dia = datetime(anyo, mes, ultimo_dia_num).date()
+
+            # Filtrar por fecha_salida o salida_programada
+            query = query.filter(
+                ProgramacionViaje.fecha_salida >= primer_dia,
+                ProgramacionViaje.fecha_salida <= ultimo_dia
+            )
+        except ValueError:
+            flash('Selección de mes inválida.', 'warning')
 
     viajes = query.order_by(ProgramacionViaje.salida_programada.desc()).limit(200).all()
 
@@ -137,11 +149,15 @@ def index():
 
     return render_template(
         'admin/programacion/index.html',
-        viajes=viajes, ocupados=ocupados, conteo=conteo, vehiculos=vehiculos,
-        estados=ESTADOS, estado_sel=estado, id_vehiculo_sel=id_vehiculo,
-        desde=desde_str, hasta=hasta_str
+        viajes=viajes, 
+        ocupados=ocupados, 
+        conteo=conteo, 
+        vehiculos=vehiculos,
+        estados=ESTADOS, 
+        estado_sel=estado, 
+        id_vehiculo_sel=id_vehiculo,
+        mes_sel=mes_str  # Pasamos mes_sel a la vista para mantener seleccionado el input tipo month
     )
-
 
 # ============================================================
 # 2. DETALLE
@@ -212,7 +228,7 @@ def editar(id_viaje):
 
     return render_template(
         'admin/programacion/formulario.html',
-        v=viaje, vehiculos=vehiculos, conductores=conductores, climas=CLIMAS,
+        v=viaje, vehiculos=vehiculos, conductores=conductores,
         form=request.form if request.method == 'POST' else {},
         formato=FORMATO_DT
     )

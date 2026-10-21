@@ -28,6 +28,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
+from routes.utils.feriados import es_feriado_peru
 
 # ---------------------------------------------------------------------
 # Configuración (ajusta la conexión a la de tu .env)
@@ -61,8 +62,7 @@ SALIDA.mkdir(exist_ok=True)
 NUMERICAS = ["dia_semana_num", "mes", "dia_mes", "es_fin_semana", "es_feriado", "es_vispera",
              "id_ruta", "id_sede_origen", "id_sede_destino", "distancia_km",
              "hora_salida_decimal", "precio_pasaje", "capacidad_asientos"]
-CATEGORICAS = ["clima"]
-FEATURES = NUMERICAS + CATEGORICAS
+FEATURES = NUMERICAS
 
 FERIADOS_FIJOS = [(1, 1), (5, 1), (6, 29), (7, 28), (7, 29), (8, 30), (10, 8),
                   (11, 1), (12, 8), (12, 25)]
@@ -111,11 +111,9 @@ def cargar_dataset():
         df[col] = df[col].astype(int)
 
     df["fecha_salida"] = pd.to_datetime(df["fecha_salida"])
-    df["clima"] = df["clima"].fillna("despejado")
 
     fer = feriados_de(range(df["fecha_salida"].dt.year.min(), df["fecha_salida"].dt.year.max() + 2))
-    df["es_vispera"] = df["fecha_salida"].dt.date.map(
-        lambda d: int((d + timedelta(days=1)) in fer))
+    df["es_vispera"] = df["fecha_salida"].dt.date.map(lambda d: int(es_feriado_peru(d + timedelta(days=1))))
 
     df["alta_ocupacion"] = (df["ocupacion"] >= UMBRAL_ALTA).astype(int)
     return df.sort_values("fecha_salida").reset_index(drop=True)
@@ -125,9 +123,7 @@ def cargar_dataset():
 # 2. Modelos candidatos
 # ---------------------------------------------------------------------
 def armar_pipeline(modelo):
-    pre = ColumnTransformer(
-        [("clima", OneHotEncoder(handle_unknown="ignore"), CATEGORICAS),
-         ("num", StandardScaler(), NUMERICAS)])
+    pre = ColumnTransformer([("num", StandardScaler(), NUMERICAS)])
     return Pipeline([("pre", pre), ("modelo", modelo)])
 
 
