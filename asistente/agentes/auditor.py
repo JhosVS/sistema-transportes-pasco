@@ -36,50 +36,44 @@ def _valores(obj, out):
 class Auditor(Agente):
     clave = "auditor"
     nombre = "Auditor"
-    tipo = "Verifica respuestas + revisión diaria"
-    grupo = "diaria"
-    libreto = ("Extraer las cifras de la respuesta del asistente",
-               "Comprobar que cada una aparezca en lo que devolvió la base (sin usar IA)",
-               "Cada día: contar pasajeros por dos caminos distintos y comparar",
-               "Detectar viajes realizados sin pasajes")
+    tipo = "Verificador (reglas, sin IA; corrige con el LLM del autor)"
+    libreto = ("Leer lo que escribió cada agente en la pizarra",
+               "Comprobar que cada cifra aparezca en lo que devolvieron las herramientas",
+               "Si hay cifras dudosas, devolver el texto a su autor para que lo corrija (1 intento)",
+               "Si persiste, dejar un aviso visible")
 
-    def auditar(self, respuesta, pregunta, salidas):
-        """Devuelve un aviso si hay cifras que no aparecen en las herramientas (cero tokens)."""
+    def auditar(self, texto, pregunta, salidas):
         if not salidas:
             return None
         reales = []
         _valores(salidas, reales)
         de_pregunta = {_num(n) for n in re.findall(r"\d[\d.,]*\d|\d", pregunta)}
         dudosas = []
-        for crudo in re.findall(r"\d[\d.,]*\d|\d", respuesta):
+        for crudo in re.findall(r"\d[\d.,]*\d|\d", texto):
             v = _num(crudo)
             if v is None or v <= 31 or 2000 <= v <= 2100 or v in de_pregunta:
                 continue
             tol = 0.51 if v == int(v) else 0.06
             if not any(abs(v - r) <= tol for r in reales):
                 dudosas.append(crudo)
-        if dudosas:
-            return "no pude comprobar estas cifras contra la base: " + ", ".join(dudosas[:4])
-        return None
+        return ("cifras sin respaldo en la base: " + ", ".join(dudosas[:4])) if dudosas else None
 
-    def tarea(self):
-        d = h._desde(30)
-        a = h._q("""SELECT COALESCE(SUM(pasajes_vendidos),0) n FROM v_dataset_ocupacion
-                    WHERE fecha_salida >= :d""", d=d)[0]["n"]
-        b = h._q("""SELECT COUNT(*) n FROM detalle_pasajes dp
-                    JOIN programacion_viaje pv ON pv.id_viaje = dp.id_viaje
-                    WHERE dp.estado <> 'anulado' AND pv.estado_viaje IN ('Finalizado','En Ruta')
-                      AND pv.fecha_salida >= :d""", d=d)[0]["n"]
-        vacios = h._q("""SELECT COUNT(*) n FROM v_dataset_ocupacion
-                         WHERE fecha_salida >= :d AND pasajes_vendidos = 0""", d=d)[0]["n"]
-        problemas = []
-        if int(a) != int(b):
-            problemas.append(f"la vista cuenta {int(a)} pasajeros y el detalle {int(b)}")
-        if vacios:
-            problemas.append(f"{int(vacios)} viaje(s) realizados sin ningún pasaje")
-        if problemas:
-            return "alerta", "Inconsistencias: " + "; ".join(problemas) + "."
-        return "ok", f"Cifras coherentes: {int(a)} pasajeros en 30 días en ambas fuentes."
+    def ejecutar(self, ctx, pregunta=None):
+        ctx.traza.append(self.nombre)
+        for item in ctx.hallazgos:
+            aviso = self.auditar(item["texto"], ctx.pregunta, h.salidas())
+            autor = ctx.agentes.get(item["clave"])
+            if aviso and autor:
+                ctx.traza.append(f"devuelve a {autor.nombre}")
+                nuevo = autor.pensar(
+                    ctx, ctx.pregunta,
+                    extra=f" El Auditor detectó {aviso}. Corrige: usa solo cifras que devuelvan tus "
+                          "herramientas, copiadas tal cual.")
+                if not nuevo.startswith("No pude generar"):
+                    item["texto"] = nuevo
+                    aviso = self.auditar(nuevo, ctx.pregunta, h.salidas())
+            if aviso:
+                ctx.avisos.append(f"{item['agente']}: {aviso}")
 
 
 agente = Auditor()

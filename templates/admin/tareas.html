@@ -1,8 +1,8 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}Agentes{% endblock %}
 {% block content %}
-<h3 class="fw-bold text-dark mb-1"><i class="bi bi-robot text-warning me-2"></i>Agentes del sistema</h3>
-<p class="text-muted small mb-4">Siete agentes con libreto propio: el orquestador los coordina y algunos trabajan solos de forma recurrente.</p>
+<h3 class="fw-bold text-dark mb-1"><i class="bi bi-robot text-warning me-2"></i>Red de agentes</h3>
+<p class="text-muted small mb-4">Cinco agentes que comparten una pizarra y el mismo LLM. El orquestador los coordina, tanto en el chat como en las rutinas programadas.</p>
 
 <div class="row g-3 mb-4">
     {% for a in agentes %}
@@ -10,32 +10,42 @@
         <div class="card border-0 shadow-sm h-100"><div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
                 <strong>{{ loop.index }}. {{ a.nombre }}</strong>
-                <span class="badge bg-secondary">{{ a.tipo }}</span>
+                <span class="badge bg-secondary text-wrap text-end">{{ a.tipo }}</span>
             </div>
-            <ol class="small text-muted ps-3 my-2">{% for p in a.libreto %}<li>{{ p }}</li>{% endfor %}</ol>
-            {% if a.clave in con_tarea %}
-            <div class="small text-muted mb-1">Frecuencia: {{ 'cada 15 min' if a.grupo == 'frecuente' else 'diaria' }}</div>
-            <button class="btn btn-sm btn-dark w-100 run" data-n="{{ a.clave }}">
-                <i class="bi bi-play-fill text-warning"></i> Ejecutar ahora</button>
-            <div class="small mt-2 res"></div>
-            {% endif %}
+            <ol class="small text-muted ps-3 my-2 mb-0">{% for p in a.libreto %}<li>{{ p }}</li>{% endfor %}</ol>
         </div></div>
     </div>
     {% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-bold">Tareas programadas (las dirige el Orquestador)</div>
+    <div class="card-body d-flex flex-wrap gap-4">
+        <div>
+            <div class="fw-semibold">Sincronizar estados <span class="badge bg-secondary">cada 15 min</span></div>
+            <button class="btn btn-sm btn-dark mt-1 run" data-n="sincronizar"><i class="bi bi-play-fill text-warning"></i> Ejecutar ahora</button>
+        </div>
+        <div>
+            <div class="fw-semibold">Rutina diaria <span class="badge bg-secondary">1 vez al día</span></div>
+            <div class="small text-muted">Analista → Predictor → Asesor → Auditor</div>
+            <button class="btn btn-sm btn-dark mt-1 run" data-n="rutina"><i class="bi bi-play-fill text-warning"></i> Ejecutar ahora</button>
+        </div>
+        <div class="small w-100 res"></div>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-dark text-white fw-bold">Registro de ejecuciones</div>
     <div class="table-responsive">
         <table class="table table-sm align-middle mb-0 small">
-            <thead class="table-light"><tr><th>Fecha</th><th>Agente</th><th>Estado</th><th>Resumen</th></tr></thead>
+            <thead class="table-light"><tr><th>Fecha</th><th>Origen</th><th>Estado</th><th>Resumen</th></tr></thead>
             <tbody>
                 {% for r in registro %}
-                <tr><td>{{ r.ejecutado_en.strftime('%d/%m %H:%M') }}</td><td>{{ r.agente }}</td>
+                <tr><td class="text-nowrap">{{ r.ejecutado_en.strftime('%d/%m %H:%M') }}</td><td>{{ r.agente }}</td>
                     <td><span class="badge bg-{{ 'success' if r.estado == 'ok' else ('warning text-dark' if r.estado == 'alerta' else 'danger') }}">{{ r.estado }}</span></td>
-                    <td>{{ r.resumen }}</td></tr>
+                    <td style="white-space:pre-wrap">{{ r.resumen }}</td></tr>
                 {% else %}
-                <tr><td colspan="4" class="text-center text-muted p-3">Aún no hay ejecuciones. Pulsa "Ejecutar ahora" en un agente.</td></tr>
+                <tr><td colspan="4" class="text-center text-muted p-3">Aún no hay ejecuciones.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -45,12 +55,12 @@
 <script>
 document.querySelectorAll('.run').forEach(b => b.onclick = async () => {
     b.disabled = true;
-    const out = b.parentElement.querySelector('.res');
-    out.textContent = 'Ejecutando...';
+    const out = document.querySelector('.res');
+    out.textContent = 'Ejecutando (la rutina puede tardar unos segundos)...';
     try {
         const r = await (await fetch("{{ url_for('tareas.index') }}/ejecutar/" + b.dataset.n, { method: 'POST' })).json();
-        out.textContent = r.estado.toUpperCase() + ': ' + r.resumen;
-        setTimeout(() => location.reload(), 2500);
+        out.textContent = r.estado.toUpperCase();
+        setTimeout(() => location.reload(), 1500);
     } catch (e) { out.textContent = 'Error de conexión'; b.disabled = false; }
 });
 </script>

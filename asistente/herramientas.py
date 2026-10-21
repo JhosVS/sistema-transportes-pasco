@@ -270,3 +270,18 @@ def recomendaciones() -> dict:
     if not acciones:
         return {"mensaje": "Sin hallazgos: la operación de los próximos 7 días está en orden."}
     return {"total": len(acciones), "acciones": acciones[:6]}
+
+@segura
+def estado_modelo() -> dict:
+    """Estado del modelo predictivo: algoritmo, fecha de entrenamiento, antigüedad en días, AUC en
+    prueba, viajes nuevos desde el entrenamiento y si conviene reentrenar."""
+    from routes.admin.predicciones import _cargar
+    _, m = _cargar()
+    if not m:
+        return {"error": "El modelo aún no está entrenado."}
+    total = int(_q("SELECT COUNT(*) n FROM v_dataset_ocupacion")[0]["n"])
+    nuevos = max(0, total - m["filas"]["total"])
+    dias = (datetime.now() - datetime.fromisoformat(m["entrenado_en"])).days
+    return {"algoritmo": m["modelo"], "entrenado_el": m["entrenado_en"][:10],
+            "dias_desde_entrenamiento": dias, "auc_prueba": m["metricas_prueba"]["roc_auc"],
+            "viajes_nuevos": nuevos, "conviene_reentrenar": bool(nuevos >= 50 or dias > 30)}

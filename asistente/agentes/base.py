@@ -1,16 +1,24 @@
 # asistente/agentes/base.py
+from asistente.llm import llamar_llm
+
+
 class Agente:
-    """Estructura común de todos los agentes."""
+    """Estructura común. Todos los agentes comparten el mismo LLM mediante pensar()."""
     clave = ""
     nombre = ""
-    rol = ""                 # instrucción que recibe el LLM (solo agentes de chat)
-    libreto = ()             # pasos que sigue el agente
-    herramientas = ()        # funciones que puede usar el LLM
-    palabras = ()            # palabras clave con las que el orquestador lo elige
+    rol = ""
+    tipo = ""
+    libreto = ()
+    herramientas = ()
+    palabras = ()
     peso = 1
-    grupo = None             # 'frecuente' | 'diaria' si tiene tarea recurrente
-    tipo = ""                # texto para mostrar en la página
 
-    def tarea(self):
-        """Tarea recurrente. Devuelve (estado, resumen)."""
-        raise NotImplementedError
+    def pensar(self, ctx, pregunta, extra=""):
+        texto, tokens = llamar_llm(pregunta, ctx.base + " " + self.rol + extra, list(self.herramientas))
+        ctx.tokens += tokens
+        return texto
+
+    def ejecutar(self, ctx, pregunta=None):
+        texto = self.pensar(ctx, pregunta or ctx.pregunta)
+        if not texto.startswith("No pude generar"):
+            ctx.anotar(self, texto)

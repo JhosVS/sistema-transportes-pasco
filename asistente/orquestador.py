@@ -8,8 +8,9 @@ from datetime import date
 from sqlalchemy import text
 
 from asistente import herramientas as h
-from asistente.llm import AsistenteOcupado, llamar_llm
-from asistente.registro import AUDITOR, CONVERSACIONALES, TAREAS
+from asistente.contexto import Contexto
+from asistente.llm import AsistenteOcupado
+from asistente.registro import POR_CLAVE, TODOS
 from models import db
 
 MAX_PREGUNTA = 300
@@ -19,8 +20,8 @@ CACHE_SEGUNDOS = 600
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
 REGLAS = (
-    "Eres el asistente de una empresa de transporte interprovincial (Cerro de Pasco, Lima, Huánuco, "
-    "Huancayo y Tarma). Responde en español, en máximo 4 frases, con cifras concretas. "
+    "Eres parte de un equipo de agentes de una empresa de transporte interprovincial (Cerro de Pasco, "
+    "Lima, Huánuco, Huancayo y Tarma). Responde en español, en máximo 4 frases, con cifras concretas. "
     "Usa SOLO los datos que devuelvan tus herramientas; si no los tienes, dilo. Nunca inventes. "
     "Copia las cifras exactamente como las devuelven las herramientas, sin reformatearlas. "
     "Si el periodo o la ruta pedidos no coinciden con lo que devuelve la herramienta, dilo explícitamente. "
@@ -35,32 +36,47 @@ REGLAS = (
     "Hoy es {dia} {hoy}."
 )
 
+PASOS_RUTINA = [
+    ("datos", "Resume en 3 frases los últimos 7 días: viajes, pasajeros, ocupación e ingresos."),
+    ("predictor", "Informa el estado del modelo predictivo y la probabilidad de los próximos viajes."),
+    ("asesor", "Da las recomendaciones de la semana."),
+    ("auditor", None),
+]
+
 _cache, _uso, _tokens = {}, {}, {"fecha": None, "total": 0}
-POR_CLAVE = {a.clave: a for a in CONVERSACIONALES}
 
 
 def _norm(t):
     return unicodedata.normalize("NFKD", t.lower()).encode("ascii", "ignore").decode().strip()
 
 
-# ---------------------------------------------------------------- CHAT
-def elegir_agentes(pregunta):
-    """Coordinación por reglas (cero tokens). Devuelve 1 agente, o 2 si la pregunta es mixta."""
+def _contexto(pregunta, origen="chat"):
+    h.iniciar_registro()
+    hoy = date.today()
+    base = REGLAS.format(hoy=hoy.isoformat(), dia=DIAS[hoy.weekday()])
+    return Contexto(pregunta, base, POR_CLAVE, origen)
+
+
+# ------------------------------------------------------------ PLANIFICACIÓN
+def planificar(pregunta):
+    """Decide qué agentes intervienen y en qué orden (reglas, cero tokens). El Auditor va siempre al final."""
     p = _norm(pregunta)
-    puntos = {a.clave: sum(w in p for w in a.palabras) * a.peso for a in CONVERSACIONALES}
+    candidatos = ("datos", "predictor", "asesor")
+    puntos = {k: sum(w in p for w in POR_CLAVE[k].palabras) * POR_CLAVE[k].peso for k in candidatos}
     if re.search(r"\d{1,2}:\d{2}", p):
         puntos["predictor"] += 3
     orden = sorted(puntos, key=puntos.get, reverse=True)
     primero = orden[0] if puntos[orden[0]] > 0 else "datos"
-    segundo = orden[1] if orden[1] != primero else orden[2]
     mixta = any(c in p for c in (" y ", "ademas", "tambien", " e "))
-    if mixta and puntos[segundo] > 0:
-        if {primero, segundo} == {"datos", "predictor"}:
-            return ["predictor"]
-        return [primero, segundo]
-    return [primero]
+    plan = [primero]
+    if mixta and primero != "asesor" and puntos["asesor"] > 0:
+        plan.append("asesor")                       # el Asesor integra lo que hallaron los demás
+    elif mixta and {primero, orden[1]} == {"datos", "predictor"}:
+        plan = ["predictor"]                        # el Predictor ya tiene top_rutas
+    return plan + ["auditor"]
 
 
+# ------------------------------------------------------------ CHAT
 def responder(pregunta, usuario):
     pregunta = (pregunta or "").strip()
     if not pregunta:
@@ -81,64 +97,74 @@ def responder(pregunta, usuario):
     if en_cache and time.time() - en_cache[0] < CACHE_SEGUNDOS:
         return {**en_cache[1], "cache": True, "tokens": 0}
 
-    h.iniciar_registro()
-    base = REGLAS.format(hoy=hoy.isoformat(), dia=DIAS[hoy.weekday()])
-    partes, nombres, total = [], [], 0
-    for k in elegir_agentes(pregunta):
-        ag = POR_CLAVE[k]
-        try:
-            texto, tokens = llamar_llm(pregunta, base + " " + ag.rol, list(ag.herramientas))
-        except AsistenteOcupado as e:
-            if partes:
-                break
+    ctx = _contexto(pregunta)
+    try:
+        for k in planificar(pregunta):
+            POR_CLAVE[k].ejecutar(ctx)
+    except AsistenteOcupado as e:
+        if not ctx.hallazgos:
             return {"error": str(e)}
-        except Exception as e:
-            traceback.print_exc()
-            if partes:
-                break
+    except Exception as e:
+        traceback.print_exc()
+        if not ctx.hallazgos:
             return {"error": f"No se pudo consultar el asistente: {e}"}
-        total += tokens
-        if texto.startswith("No pude generar"):
-            continue
-        partes.append(texto)
-        nombres.append(ag.nombre)
 
-    _tokens["total"] += total
-    if not partes:
+    _tokens["total"] += ctx.tokens
+    if not ctx.hallazgos:
         return {"error": "No pude responder; reformula la pregunta."}
 
-    respuesta = partes[0] if len(partes) == 1 else "\n\n".join(f"{n}: {t}" for n, t in zip(nombres, partes))
-    aviso = AUDITOR.auditar(respuesta, pregunta, h.salidas())
-    if aviso:
-        respuesta += f"\n\n⚠ Auditor: {aviso}."
+    respuesta = ctx.hallazgos[-1]["texto"]
+    if ctx.avisos:
+        respuesta += "\n\n⚠ Auditor: " + "; ".join(ctx.avisos) + "."
     _uso[(usuario, hoy)] = _uso.get((usuario, hoy), 0) + 1
-    resp = {"respuesta": respuesta, "agente": " + ".join(nombres + ["Auditor"]),
-            "tokens": total, "cache": False}
+    resp = {"respuesta": respuesta, "agente": " → ".join(ctx.traza), "tokens": ctx.tokens, "cache": False}
     _cache[clave] = (time.time(), resp)
     return resp
 
 
-# ---------------------------------------------------------------- TAREAS
-def ejecutar_tarea(clave):
-    ag = next(a for a in TAREAS if a.clave == clave)
+# ------------------------------------------------------------ TAREAS PROGRAMADAS
+def _registrar(agente, tarea, estado, resumen):
+    db.session.execute(text("""INSERT INTO tareas_agente (agente, tarea, estado, resumen)
+                               VALUES (:a, :t, :e, :r)"""),
+                       {"a": agente, "t": tarea, "e": estado, "r": resumen[:4000]})
+    db.session.commit()
+
+
+def sincronizar():
+    """Cada 15 min: tarea de sistema que el Orquestador ejecuta (mantiene los datos al día)."""
     try:
-        estado, resumen = ag.tarea()
+        from routes.utils.estados_viaje import sincronizar_estados
+        n = sincronizar_estados()
+        estado, resumen = "ok", f"{n} cambio(s) de estado aplicados."
     except Exception as e:
         db.session.rollback()
         estado, resumen = "error", str(e)[:480]
-    db.session.execute(text("""INSERT INTO tareas_agente (agente, tarea, estado, resumen)
-                               VALUES (:a, :t, :e, :r)"""),
-                       {"a": ag.nombre, "t": ag.clave, "e": estado, "r": resumen})
-    db.session.commit()
-    return {"agente": ag.nombre, "estado": estado, "resumen": resumen}
+    _registrar("Orquestador", "sincronizar", estado, resumen)
+    return {"agente": "Orquestador", "estado": estado, "resumen": resumen}
 
 
-def ejecutar_grupo(grupo):
-    """Ejecuta en orden todos los agentes con tarea de ese grupo ('frecuente' o 'diaria')."""
-    return [ejecutar_tarea(a.clave) for a in TAREAS if a.grupo == grupo]
+def rutina_diaria():
+    """Cada día: el Orquestador activa la red completa y guarda un informe."""
+    try:
+        sincronizar()
+        ctx = _contexto("Informe diario de operación", origen="rutina")
+        for k, preg in PASOS_RUTINA:
+            POR_CLAVE[k].ejecutar(ctx, preg)
+        hay_alta = any(isinstance(s, dict) and any(a.get("prioridad") == "alta" for a in s.get("acciones", []))
+                       for s in h.salidas())
+        estado = "alerta" if (ctx.avisos or hay_alta) else "ok"
+        cuerpo = " | ".join(f"{x['agente']}: {x['texto']}" for x in ctx.hallazgos)
+        if ctx.avisos:
+            cuerpo += " | ⚠ " + "; ".join(ctx.avisos)
+        resumen = " → ".join(ctx.traza) + "\n" + cuerpo
+    except Exception as e:
+        db.session.rollback()
+        estado, resumen = "error", str(e)[:480]
+    _registrar("Orquestador (rutina)", "rutina_diaria", estado, resumen)
+    return {"agente": "Red de agentes", "estado": estado, "resumen": resumen}
 
 
-def ultimos(limite=30):
+def ultimos(limite=20):
     return [dict(r._mapping) for r in db.session.execute(text(
         "SELECT agente, estado, resumen, ejecutado_en FROM tareas_agente ORDER BY id DESC LIMIT :n"),
         {"n": limite})]
