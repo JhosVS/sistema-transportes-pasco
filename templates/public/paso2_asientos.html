@@ -1,179 +1,90 @@
 {% extends 'public/base_public.html' %}
-
-{% block title %}Seleccionar Asientos{% endblock %}
+{% block title %}Elegir Asientos{% endblock %}
 
 {% block content %}
+{% macro asiento(n) %}
+    {% if n <= viaje.capacidad %}
+    <div class="asiento {{ 'ocupado' if n in ocupados else ('elegido' if n in elegidos else 'libre') }}" data-n="{{ n }}">{{ n }}</div>
+    {% else %}<div style="width:44px"></div>{% endif %}
+{% endmacro %}
 <style>
-.bus-layout {
-    max-width: 320px;
-    background: #f8f9fa;
-    border: 2px solid #dee2e6;
-    border-radius: 20px;
-    padding: 20px 15px;
-}
-.asiento-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    user-select: none;
-}
-.asiento-libre { background-color: #ffffff; border: 2px solid #198754; color: #198754; }
-.asiento-libre:hover { background-color: #198754; color: #ffffff; }
-.asiento-seleccionado { background-color: #ffc107 !important; border: 2px solid #ffc107 !important; color: #000 !important; }
-.asiento-ocupado { background-color: #dc3545; border: 2px solid #dc3545; color: #ffffff; cursor: not-allowed; opacity: 0.6; }
-.pasillo { width: 30px; }
+    .bus { max-width: 300px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 20px; padding: 16px 14px; }
+    .asiento { width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+               font-weight: 600; font-size: .85rem; cursor: pointer; user-select: none; }
+    .libre { background: #fff; border: 2px solid #198754; color: #198754; }
+    .libre:hover { background: #198754; color: #fff; }
+    .elegido { background: #ffc107; border: 2px solid #ffc107; color: #000; }
+    .ocupado { background: #dc3545; border: 2px solid #dc3545; color: #fff; opacity: .55; cursor: not-allowed; }
 </style>
 
 <div class="container py-4">
+    {% set paso = 2 %}{% include 'public/_pasos.html' %}
     <div class="row g-4 justify-content-center">
-        
-        <!-- Croquis del Bus -->
         <div class="col-md-5 d-flex flex-column align-items-center">
-            <h6 class="fw-bold text-dark mb-3">Distribución de Asientos</h6>
-            
-            <div class="bus-layout shadow-sm position-relative">
-                <div class="text-center text-muted small fw-bold mb-3 pb-2 border-bottom">
-                    <i class="bi bi-disc me-1"></i> FRENTE DEL BUS / CHOFER
-                </div>
-
-                {% for fila in range(num_filas) %}
+            <div class="bus shadow-sm">
+                <div class="text-center text-muted small fw-bold mb-3 pb-2 border-bottom">FRENTE DEL BUS</div>
+                {% for f in range(num_filas) %}
                 <div class="d-flex justify-content-between mb-2">
-                    {% set a1 = fila * 4 + 1 %}
-                    {% set a2 = fila * 4 + 2 %}
-                    <div class="d-flex gap-2">
-                        {% if a1 <= viaje.capacidad_asientos %}
-                            <div class="asiento-btn {% if a1 in ocupados %}asiento-ocupado{% else %}asiento-libre{% endif %}"
-                                 data-num="{{ a1 }}" {% if a1 not in ocupados %}onclick="toggleAsiento(this)"{% endif %}>
-                                {{ a1 }}
-                            </div>
-                        {% endif %}
-                        {% if a2 <= viaje.capacidad_asientos %}
-                            <div class="asiento-btn {% if a2 in ocupados %}asiento-ocupado{% else %}asiento-libre{% endif %}"
-                                 data-num="{{ a2 }}" {% if a2 not in ocupados %}onclick="toggleAsiento(this)"{% endif %}>
-                                {{ a2 }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="pasillo"></div>
-
-                    {% set a3 = fila * 4 + 3 %}
-                    {% set a4 = fila * 4 + 4 %}
-                    <div class="d-flex gap-2">
-                        {% if a3 <= viaje.capacidad_asientos %}
-                            <div class="asiento-btn {% if a3 in ocupados %}asiento-ocupado{% else %}asiento-libre{% endif %}"
-                                 data-num="{{ a3 }}" {% if a3 not in ocupados %}onclick="toggleAsiento(this)"{% endif %}>
-                                {{ a3 }}
-                            </div>
-                        {% endif %}
-                        {% if a4 <= viaje.capacidad_asientos %}
-                            <div class="asiento-btn {% if a4 in ocupados %}asiento-ocupado{% else %}asiento-libre{% endif %}"
-                                 data-num="{{ a4 }}" {% if a4 not in ocupados %}onclick="toggleAsiento(this)"{% endif %}>
-                                {{ a4 }}
-                            </div>
-                        {% endif %}
-                    </div>
+                    <div class="d-flex gap-2">{{ asiento(f*4+1) }}{{ asiento(f*4+2) }}</div>
+                    <div style="width:26px"></div>
+                    <div class="d-flex gap-2">{{ asiento(f*4+3) }}{{ asiento(f*4+4) }}</div>
                 </div>
                 {% endfor %}
             </div>
-
             <div class="d-flex gap-3 mt-3 small">
-                <div><span class="badge bg-white text-success border border-success">Libre</span></div>
-                <div><span class="badge bg-warning text-dark">Seleccionado</span></div>
-                <div><span class="badge bg-danger">Ocupado</span></div>
+                <span class="badge bg-white text-success border border-success">Libre</span>
+                <span class="badge bg-warning text-dark">Elegido</span>
+                <span class="badge bg-danger">Ocupado</span>
             </div>
         </div>
 
-        <!-- Resumen de Compra -->
         <div class="col-md-5">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold text-dark mb-3">Resumen de la Reserva</h5>
-                    
-                    <div class="small mb-3">
-                        <div class="text-muted">Comprador:</div>
-                        <div class="fw-bold text-dark">{{ cliente.nombre_cliente }} (DNI: {{ cliente.dni }})</div>
-                    </div>
-
-                    <div class="small mb-3">
-                        <div class="text-muted">Trayecto:</div>
-                        <div class="fw-bold text-dark">{{ viaje.origen_ciudad }} ➔ {{ viaje.destino_ciudad }}</div>
-                        <div class="text-muted small">{{ viaje.origen }} ➔ {{ viaje.destino }}</div>
-                        <div class="text-muted mt-1">
-                            {% if viaje.fecha_salida and viaje.fecha_salida.strftime %}
-                                {{ viaje.fecha_salida.strftime('%d/%m/%Y') }}
-                            {% else %}
-                                {{ viaje.fecha_salida }}
-                            {% endif %}
-                            - {{ viaje.hora_salida }} hrs
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small text-muted">Asientos Elegidos:</span>
-                        <span id="txt_asientos" class="fw-bold text-dark">Ninguno</span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="small text-muted">Precio por Pasaje:</span>
-                        <span class="fw-bold text-dark">S/ {{ "%.2f"|format(viaje.precio_pasaje_base) }}</span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center fs-4 fw-bold text-dark border-top pt-2">
-                        <span>Total:</span>
-                        <span class="text-success" id="txt_total">S/ 0.00</span>
-                    </div>
-
-                    <form method="POST" class="mt-4">
-                        <input type="hidden" id="asientos_seleccionados" name="asientos_seleccionados" value="">
-                        <button type="submit" id="btn_confirmar" class="btn btn-warning fw-bold text-dark w-100 py-2" disabled>
-                            Confirmar y Pagar
-                        </button>
-                    </form>
-                </div>
-            </div>
+            <div class="card border-0 shadow-sm rounded-3"><div class="card-body p-4">
+                <div class="fw-bold fs-5">{{ viaje.origen_ciudad }} → {{ viaje.destino_ciudad }}</div>
+                <div class="text-muted small mb-3">{{ viaje.fecha.strftime('%d/%m/%Y') }} · {{ viaje.hora }} → {{ viaje.llegada }} hrs<br>
+                    Sale de {{ viaje.origen }}</div>
+                <hr>
+                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Asientos</span>
+                    <strong id="txtAsientos">Ninguno</strong></div>
+                <div class="d-flex justify-content-between small mb-3"><span class="text-muted">Precio por asiento</span>
+                    <strong>S/ {{ "%.2f"|format(viaje.precio) }}</strong></div>
+                <div class="d-flex justify-content-between fs-4 fw-bold border-top pt-2"><span>Total</span>
+                    <span class="text-success" id="txtTotal">S/ 0.00</span></div>
+                <div class="text-muted small mt-2">Máximo {{ max_asientos }} asientos por compra.</div>
+                <form method="POST" class="mt-3">
+                    <input type="hidden" name="asientos" id="asientos">
+                    <button id="btn" class="btn btn-warning fw-bold text-dark w-100 py-2" disabled>Continuar con los datos de pasajeros</button>
+                </form>
+                <a href="{{ url_for('public.buscar_viaje') }}" class="small text-muted text-decoration-none d-block text-center mt-3">← Volver a la búsqueda</a>
+            </div></div>
         </div>
-
     </div>
 </div>
 
 <script>
-const PRECIO_BASE = {{ viaje.precio_pasaje_base }};
-let elegidos = [];
-
-function toggleAsiento(element) {
-    const num = parseInt(element.getAttribute('data-num'));
-    
-    if (elegidos.includes(num)) {
-        elegidos = elegidos.filter(a => a !== num);
-        element.classList.remove('asiento-seleccionado');
-        element.classList.add('asiento-libre');
-    } else {
-        elegidos.push(num);
-        element.classList.remove('asiento-libre');
-        element.classList.add('asiento-seleccionado');
-    }
-
-    actualizarResumen();
-}
-
-function actualizarResumen() {
+const PRECIO = {{ viaje.precio }}, MAX = {{ max_asientos }};
+let elegidos = {{ elegidos|tojson }};
+function pintar() {
     elegidos.sort((a, b) => a - b);
-    document.getElementById('asientos_seleccionados').value = elegidos.join(',');
-    document.getElementById('txt_asientos').textContent = elegidos.length > 0 ? elegidos.join(', ') : 'Ninguno';
-    
-    const total = elegidos.length * PRECIO_BASE;
-    document.getElementById('txt_total').textContent = `S/ ${total.toFixed(2)}`;
-    
-    document.getElementById('btn_confirmar').disabled = elegidos.length === 0;
+    document.getElementById('asientos').value = elegidos.join(',');
+    document.getElementById('txtAsientos').textContent = elegidos.join(', ') || 'Ninguno';
+    document.getElementById('txtTotal').textContent = 'S/ ' + (elegidos.length * PRECIO).toFixed(2);
+    document.getElementById('btn').disabled = !elegidos.length;
 }
+document.querySelectorAll('.asiento').forEach(el => {
+    if (el.classList.contains('ocupado')) return;
+    el.addEventListener('click', () => {
+        const n = +el.dataset.n;
+        if (elegidos.includes(n)) {
+            elegidos = elegidos.filter(x => x !== n);
+            el.classList.replace('elegido', 'libre');
+        } else if (elegidos.length < MAX) {
+            elegidos.push(n);
+            el.classList.replace('libre', 'elegido');
+        } else { alert('Máximo ' + MAX + ' asientos por compra.'); }
+        pintar();
+    });
+});
+pintar();
 </script>
 {% endblock %}

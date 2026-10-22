@@ -1,0 +1,87 @@
+{% extends 'public/base_public.html' %}
+{% block title %}Datos de Pasajeros{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+    {% set paso = 3 %}{% include 'public/_pasos.html' %}
+    <div class="mb-3">
+        <h5 class="fw-bold mb-0">{{ viaje.origen_ciudad }} → {{ viaje.destino_ciudad }}</h5>
+        <div class="text-muted small">{{ viaje.fecha.strftime('%d/%m/%Y') }} · {{ viaje.hora }} hrs · {{ asientos|length }} asiento(s)</div>
+    </div>
+
+    <form method="POST">
+        {% for a in asientos %}
+        <div class="card border-0 shadow-sm rounded-3 mb-3 pax" data-a="{{ a }}">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="fw-bold"><span class="badge bg-warning text-dark me-2">Asiento {{ a }}</span>Pasajero {{ loop.index }}
+                        {% if loop.first %}<span class="text-muted fw-normal small">(será el comprador)</span>{% endif %}</span>
+                    <span class="small estado"></span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted">DNI *</label>
+                        <input name="dni_{{ a }}" class="form-control dni" maxlength="8" pattern="[0-9]{8}" required
+                               value="{{ datos.get('dni_' ~ a, '') }}" autocomplete="off">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label small fw-semibold text-muted">NOMBRES Y APELLIDOS *</label>
+                        <input name="nombre_{{ a }}" class="form-control nombre" required value="{{ datos.get('nombre_' ~ a, '') }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted">FECHA DE NACIMIENTO</label>
+                        <input type="date" name="nac_{{ a }}" class="form-control nac" value="{{ datos.get('nac_' ~ a, '') }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted">SEXO</label>
+                        <select name="sexo_{{ a }}" class="form-select sexo">
+                            {% set s = datos.get('sexo_' ~ a, '') %}
+                            <option value="">—</option>
+                            <option value="M" {{ 'selected' if s == 'M' }}>Masculino</option>
+                            <option value="F" {{ 'selected' if s == 'F' }}>Femenino</option>
+                            <option value="otro" {{ 'selected' if s == 'otro' }}>Otro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="card border-0 shadow-sm rounded-3 mb-3">
+            <div class="card-body p-4">
+                <div class="fw-bold mb-3"><i class="bi bi-telephone text-warning me-1"></i>Contacto del comprador</div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label small fw-semibold text-muted">TELÉFONO *</label>
+                        <input name="telefono" type="tel" class="form-control" required value="{{ datos.get('telefono', '') }}"></div>
+                    <div class="col-md-6"><label class="form-label small fw-semibold text-muted">CORREO</label>
+                        <input name="email" type="email" class="form-control" value="{{ datos.get('email', '') }}"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('reservas.asientos', id_viaje=viaje.id_viaje) }}" class="text-muted small text-decoration-none">← Cambiar asientos</a>
+            <button class="btn btn-warning fw-bold text-dark px-4">Continuar al pago →</button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.querySelectorAll('.pax').forEach(card => {
+    const dni = card.querySelector('.dni'), estado = card.querySelector('.estado');
+    dni.addEventListener('input', async () => {
+        if (dni.value.length !== 8) { estado.textContent = ''; return; }
+        estado.className = 'small text-muted estado'; estado.textContent = 'Consultando RENIEC...';
+        try {
+            const d = await (await fetch(`/reserva/api/dni/${dni.value}`)).json();
+            if (d.success) {
+                if (d.nombres_completos) card.querySelector('.nombre').value = d.nombres_completos;
+                if (d.fecha_nacimiento) card.querySelector('.nac').value = d.fecha_nacimiento;
+                if (d.sexo) card.querySelector('.sexo').value = d.sexo;
+                estado.className = 'small text-success fw-semibold estado'; estado.textContent = '✓ Verificado';
+            } else { estado.className = 'small text-warning estado'; estado.textContent = 'No encontrado: ingresa los datos'; }
+        } catch (e) { estado.className = 'small text-secondary estado'; estado.textContent = 'RENIEC no disponible'; }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'public/base_public.html' %}
+{% block title %}Confirmar y Pagar{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+    {% set paso = 4 %}{% include 'public/_pasos.html' %}
+    <div class="card border-0 shadow-sm rounded-3 mb-3"><div class="card-body p-4">
+        <h5 class="fw-bold mb-1">{{ viaje.origen_ciudad }} → {{ viaje.destino_ciudad }}</h5>
+        <div class="text-muted small mb-3">{{ viaje.fecha.strftime('%d/%m/%Y') }} · {{ viaje.hora }} → {{ viaje.llegada }} hrs · Sale de {{ viaje.origen }}</div>
+        <table class="table table-sm align-middle mb-2">
+            <thead class="table-light"><tr><th>Asiento</th><th>Pasajero</th><th>DNI</th><th class="text-end">Precio</th></tr></thead>
+            <tbody>
+                {% for f in filas %}
+                <tr><td><span class="badge bg-warning text-dark">{{ f.asiento }}</span></td><td>{{ f.nombre }}</td><td>{{ f.dni }}</td>
+                    <td class="text-end">S/ {{ "%.2f"|format(viaje.precio) }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-between fs-4 fw-bold border-top pt-2"><span>Total</span>
+            <span class="text-success">S/ {{ "%.2f"|format(total) }}</span></div>
+        <div class="small text-muted mt-2">Contacto: {{ contacto.telefono }}{{ ' · ' ~ contacto.email if contacto.email }}</div>
+    </div></div>
+
+    <form method="POST" class="card border-0 shadow-sm rounded-3"><div class="card-body p-4">
+        <div class="fw-bold mb-3">Método de pago</div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for v, t in metodos %}
+            <input type="radio" class="btn-check" name="metodo" id="m_{{ v }}" value="{{ v }}" {{ 'checked' if loop.first }}>
+            <label class="btn btn-outline-dark" for="m_{{ v }}">{{ t }}</label>
+            {% endfor %}
+        </div>
+        <div class="alert alert-light border small"><i class="bi bi-info-circle text-warning me-1"></i>
+            Pago simulado: no se realiza ningún cargo real.</div>
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('reservas.pasajeros', id_viaje=viaje.id_viaje) }}" class="text-muted small text-decoration-none">← Editar pasajeros</a>
+            <button class="btn btn-warning fw-bold text-dark px-4">Pagar S/ {{ "%.2f"|format(total) }}</button>
+        </div>
+    </div></form>
+</div>
+{% endblock %}
