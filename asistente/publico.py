@@ -69,7 +69,7 @@ def tarifa_encomienda(origen: str, destino: str) -> dict:
            o=f"%{origen.strip()}%", d=f"%{destino.strip()}%")[0]["kg"]
     if f is None:
         return {"error": "No hay servicio de encomiendas para esa ruta."}
-    return {"soles_por_kg": float(f), "cobro_minimo_soles": 5.0, "peso_maximo_kg": 50,
+    return {"soles_por_kg": float(f), "peso_minimo_kg": 1, "peso_maximo_kg": 20,
             "recojo": "En el terminal de destino, con DNI y clave de recojo"}
 
 

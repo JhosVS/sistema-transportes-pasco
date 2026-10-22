@@ -9,7 +9,7 @@ from models import Cliente, DetalleEncomienda, ProgramacionViaje, ReservaVenta, 
 
 encomiendas_bp = Blueprint('encomiendas', __name__, url_prefix='/encomienda')
 
-PESO_MIN, PESO_MAX, COBRO_MINIMO = Decimal('0.1'), Decimal('50'), Decimal('5.00')
+PESO_MIN, PESO_MAX = Decimal('1'), Decimal('20')   # kg por encomienda
 ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 METODOS = [('yape', 'Yape'), ('plin', 'Plin'), ('tarjeta', 'Tarjeta'), ('transferencia', 'Transferencia')]
 ETAPAS = ['Registrada', 'En tránsito', 'En agencia destino', 'Entregada']
@@ -24,7 +24,7 @@ def _clave(dni):
 
 
 def _monto(peso, precio_kg):
-    return max((peso * precio_kg).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), COBRO_MINIMO)
+    return (peso * precio_kg).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
 def _viaje(id_viaje):
@@ -43,15 +43,20 @@ def _info(v):
             'precio_kg': float(v.horario.precio_kg_carga_base)}
 
 
-def _error_capacidad(v, peso):
+def _carga_libre(v):
+    """Kg que aún caben en el vehículo del viaje (None si no hay vehículo asignado)."""
     veh = v.vehiculo_efectivo
     if not veh:
         return None
     usado = db.session.query(func.coalesce(func.sum(DetalleEncomienda.peso_kg), 0)).filter(
         DetalleEncomienda.id_viaje == v.id_viaje, DetalleEncomienda.estado_entrega != 'Perdido').scalar()
-    libre = Decimal(veh.capacidad_carga_kg) - Decimal(usado)
-    if peso > libre:
-        return f'No hay capacidad de carga suficiente (disponible: {max(libre, Decimal(0)):.1f} kg).'
+    return max(Decimal(veh.capacidad_carga_kg) - Decimal(usado), Decimal(0))
+
+
+def _error_capacidad(v, peso):
+    libre = _carga_libre(v)
+    if libre is not None and peso > libre:
+        return f'Este viaje solo admite {libre:.1f} kg más de carga.'
     return None
 
 
@@ -71,10 +76,11 @@ def _leer(form):
     try:
         peso = Decimal(d['peso'].replace(',', '.'))
         if not PESO_MIN <= peso <= PESO_MAX:
-            err.append(f'El peso debe estar entre {PESO_MIN} y {PESO_MAX} kg.')
+            err.append(f'El peso debe estar entre {PESO_MIN:.0f} y {PESO_MAX:.0f} kg.')
+        elif peso != peso.quantize(Decimal('0.1')):
+            err.append('El peso admite un solo decimal (por ejemplo 1.5).')
     except InvalidOperation:
         err.append('Ingresa un peso válido en kg.')
-    return d, err, peso
 
 
 # ---------------------------------------------------------------- PASO 2: envío
@@ -97,8 +103,14 @@ def envio(id_viaje):
             return redirect(url_for('encomiendas.pago', id_viaje=id_viaje))
     elif session.get('encomienda_temp', {}).get('id_viaje') == id_viaje:
         datos = session['encomienda_temp']
+    libre = _carga_libre(v)
+    limite = PESO_MAX if libre is None else min(PESO_MAX, libre)
+    if limite < PESO_MIN:
+        flash('Este viaje ya no tiene capacidad de carga. Elige otra salida.', 'warning')
+        return redirect(url_for('public.buscar_viaje'))
     return render_template('public/encomienda_envio.html', viaje=_info(v), datos=datos,
-                           cobro_minimo=float(COBRO_MINIMO), peso_max=float(PESO_MAX))
+                           peso_min=float(PESO_MIN), limite=float(limite),
+                           libre=None if libre is None else float(libre))
 
 
 # ---------------------------------------------------------------- PASO 3: pago
