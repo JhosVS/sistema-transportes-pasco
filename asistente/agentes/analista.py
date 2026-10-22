@@ -6,14 +6,17 @@ class Analista(Agente):
     clave = "datos"
     nombre = "Analista"
     tipo = "Especialista (LLM + base de datos)"
-    rol = "Analizas ventas, ocupación, rutas, retrasos y flota."
+    rol =   ("Analizas ventas, ocupación, rutas, retrasos y flota."
+            " Para precios usa precios_ruta; el precio depende del horario, no del vehículo: si todos "
+            "cuestan igual, dilo así en vez de elegir un vehículo.")
     libreto = ("Identificar el periodo y la métrica pedidos", "Consultar la herramienta adecuada",
                "Dejar en la pizarra las cifras tal como las devuelve la base")
-    herramientas = (h.resumen_periodo, h.resumen_rango, h.top_rutas, h.ocupacion_por_dia_semana, h.estado_flota)
+    herramientas = (h.resumen_periodo, h.resumen_rango, h.top_rutas, h.ocupacion_por_dia_semana, h.estado_flota,
+                    h.precios_ruta)
     palabras = ("ventas", "ingres", "pasajer", "ocupacion", "ruta", "cuantos", "cuanto", "retraso",
                 "flota", "mes", "cancel", "mas se", "dia", "enero", "febrero", "marzo",
                 "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre",
-                "diciembre")
+                "diciembre", "barato", "precio", "tarifa", "cuesta", "caro")
     peso = 1
 
 

@@ -295,3 +295,24 @@ def demanda_por_dia_semana(id_ruta: int) -> dict:
     return {"ruta": _nombre_ruta(ruta),
             "dias": [{"dia": DIAS[d], "prob_alta_ocupacion_pct": round(sum(v) / len(v), 1)}
                      for d, v in sorted(por_dia.items())]}
+
+@segura
+def precios_ruta(origen: str, destino: str) -> list:
+    """Precio del pasaje por horario para una ruta, con el vehículo asignado a cada salida.
+    origen y destino son ciudades (ej. 'Tarma', 'Cerro de Pasco'). Ordenado del más barato al más caro.
+    El precio lo define el horario, no el vehículo."""
+    filas = _q("""SELECT h.dia_semana, h.hora_salida, h.precio_pasaje_base precio,
+                         ve.placa, ve.tipo, ve.marca, ve.modelo, ve.capacidad_asientos asientos
+                  FROM horarios h
+                  JOIN rutas r  ON r.id_ruta = h.id_ruta
+                  JOIN sedes so ON so.id_sede = r.id_sede_origen
+                  JOIN sedes sd ON sd.id_sede = r.id_sede_destino
+                  LEFT JOIN vehiculo ve ON ve.id_vehiculo = h.id_vehiculo_default
+                  WHERE h.estado = 'Activo' AND so.ciudad LIKE :o AND sd.ciudad LIKE :d
+                  ORDER BY h.precio_pasaje_base, h.id_horario""",
+              o=f"%{origen.strip()}%", d=f"%{destino.strip()}%")
+    if not filas:
+        return [{"error": "No hay horarios activos para esa ruta."}]
+    return [{"dia": f["dia_semana"], "hora": str(f["hora_salida"])[:5], "precio_soles": float(f["precio"]),
+             "vehiculo": f"{f['placa']} ({f['marca']} {f['modelo']}, {f['tipo']}, {f['asientos']} asientos)"
+                         if f["placa"] else "sin vehículo asignado"} for f in filas]
