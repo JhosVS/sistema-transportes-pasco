@@ -1,6 +1,7 @@
+# /routes/public/main.py
 from datetime import datetime, timedelta
 
-from flask import Blueprint, flash, render_template, request
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from sqlalchemy.orm import aliased
 
 from models import DetallePasaje, Horario, ProgramacionViaje, Ruta, Sede, db
@@ -87,22 +88,24 @@ def buscar_viaje():
                     continue
                 fecha += timedelta(days=7)
 
-            viaje = _viaje_de(h, fecha)
-            if viaje.estado_viaje != 'Programado':
+            viaje = ProgramacionViaje.query.filter_by(id_horario=h.id_horario, fecha_salida=fecha).first()
+            if viaje and viaje.estado_viaje != 'Programado':
                 continue
-            veh = viaje.vehiculo or h.vehiculo_default
-            ocupados = (db.session.query(DetallePasaje)
-                        .filter(DetallePasaje.id_viaje == viaje.id_viaje, DetallePasaje.estado != 'anulado')
-                        .count())
+            salida = datetime.combine(fecha, h.hora_salida)
             horas = float(h.ruta.duracion_estimada_hrs)
+            veh = (viaje.vehiculo if viaje else None) or h.vehiculo_default
+            ocupados = (db.session.query(DetallePasaje)
+                        .filter(DetallePasaje.id_viaje == viaje.id_viaje, DetallePasaje.estado != 'anulado').count()
+                        if viaje else 0)
             viajes.append({
-                'id_viaje': viaje.id_viaje, 'salida': viaje.salida_programada,
+                'id_horario': h.id_horario, 'fecha_iso': fecha.isoformat(),
+                'id_viaje': viaje.id_viaje if viaje else None, 'salida': salida,
                 'fecha': fecha.strftime('%d/%m/%Y'), 'dia': h.dia_semana,
-                'hora': viaje.salida_programada.strftime('%H:%M'),
-                'llegada': viaje.llegada_programada.strftime('%H:%M'),
-                'duracion': _duracion(horas), 'precio': float(viaje.precio_pasaje),
-                'precio_kg': float(h.precio_kg_carga_base),
-                'terminal': h.ruta.origen.nombre_sede,
+                'hora': salida.strftime('%H:%M'),
+                'llegada': (salida + timedelta(hours=horas)).strftime('%H:%M'),
+                'duracion': _duracion(horas),
+                'precio': float(viaje.precio_pasaje if viaje else h.precio_pasaje_base),
+                'precio_kg': float(h.precio_kg_carga_base), 'terminal': h.ruta.origen.nombre_sede,
                 'libres': max(0, (veh.capacidad_asientos if veh else 0) - ocupados)})
         viajes.sort(key=lambda x: x['salida'])
         if not viajes:
@@ -111,3 +114,17 @@ def buscar_viaje():
     return render_template('public/buscar_viaje.html', ciudades=ciudades, destinos=destinos,
                            viajes=viajes, origen=origen, destino=destino, fecha=fecha_str,
                            hoy=datetime.now().strftime('%Y-%m-%d'))
+
+@public_bp.route('/viaje/crear/<int:id_horario>/<fecha>/<destino>')
+def abrir_viaje(id_horario, fecha, destino):
+    h = db.session.get(Horario, id_horario)
+    try:
+        f = datetime.strptime(fecha, '%Y-%m-%d').date()
+    except ValueError:
+        f = None
+    if not h or h.estado != 'Activo' or not f or datetime.combine(f, h.hora_salida) <= datetime.now():
+        flash('Esa salida ya no está disponible.', 'warning')
+        return redirect(url_for('public.buscar_viaje'))
+    v = _viaje_de(h, f)
+    return redirect(url_for('reservas.asientos' if destino == 'asientos' else 'encomiendas.envio',
+                            id_viaje=v.id_viaje))
