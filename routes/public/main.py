@@ -5,7 +5,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from sqlalchemy.orm import aliased
 
 from models import DetallePasaje, Horario, ProgramacionViaje, Ruta, Sede, db
-from routes.utils.feriados import es_feriado_peru
 
 public_bp = Blueprint('public', __name__)
 
@@ -26,22 +25,6 @@ def _ciudades():
     todas = sorted(set(destinos) | {d for v in destinos.values() for d in v})
     return todas, {k: sorted(v) for k, v in destinos.items()}
 
-
-def _viaje_de(h, fecha):
-    """Devuelve el viaje del horario en esa fecha; lo crea si no existe."""
-    viaje = ProgramacionViaje.query.filter_by(id_horario=h.id_horario, fecha_salida=fecha).first()
-    if not viaje:
-        salida = datetime.combine(fecha, h.hora_salida)
-        horas = float(h.ruta.duracion_estimada_hrs) if h.ruta else 0.0
-        viaje = ProgramacionViaje(
-            id_horario=h.id_horario, id_vehiculo=h.id_vehiculo_default,
-            id_conductor=h.id_conductor_default, fecha_salida=fecha,
-            salida_programada=salida, llegada_programada=salida + timedelta(hours=horas),
-            precio_pasaje=h.precio_pasaje_base, estado_viaje='Programado',
-            es_feriado=es_feriado_peru(fecha))
-        db.session.add(viaje)
-        db.session.commit()
-    return viaje
 
 
 def _duracion(horas):
@@ -114,17 +97,3 @@ def buscar_viaje():
     return render_template('public/buscar_viaje.html', ciudades=ciudades, destinos=destinos,
                            viajes=viajes, origen=origen, destino=destino, fecha=fecha_str,
                            hoy=datetime.now().strftime('%Y-%m-%d'))
-
-@public_bp.route('/viaje/crear/<int:id_horario>/<fecha>/<destino>')
-def abrir_viaje(id_horario, fecha, destino):
-    h = db.session.get(Horario, id_horario)
-    try:
-        f = datetime.strptime(fecha, '%Y-%m-%d').date()
-    except ValueError:
-        f = None
-    if not h or h.estado != 'Activo' or not f or datetime.combine(f, h.hora_salida) <= datetime.now():
-        flash('Esa salida ya no está disponible.', 'warning')
-        return redirect(url_for('public.buscar_viaje'))
-    v = _viaje_de(h, f)
-    return redirect(url_for('reservas.asientos' if destino == 'asientos' else 'encomiendas.envio',
-                            id_viaje=v.id_viaje))

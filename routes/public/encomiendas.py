@@ -5,7 +5,8 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from sqlalchemy import func
 
-from models import Cliente, DetalleEncomienda, ProgramacionViaje, ReservaVenta, db
+from models import Cliente, DetalleEncomienda, ReservaVenta, db
+from routes.utils.salidas import Salida, crear_viaje, resolver
 
 encomiendas_bp = Blueprint('encomiendas', __name__, url_prefix='/encomienda')
 
@@ -13,9 +14,9 @@ PESO_MIN, PESO_MAX = Decimal('1'), Decimal('20')   # kg por encomienda
 ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 METODOS = [('yape', 'Yape'), ('plin', 'Plin'), ('tarjeta', 'Tarjeta'), ('transferencia', 'Transferencia')]
 ETAPAS = ['Registrada', 'En tránsito', 'En agencia destino', 'Entregada']
+AVISO = 'Este viaje ya no admite encomiendas. Elige otra salida.'
 
 
-# ---------------------------------------------------------------- helpers
 def _clave(dni):
     while True:
         c = ''.join(secrets.choice(ALFABETO) for _ in range(6))
@@ -27,37 +28,28 @@ def _monto(peso, precio_kg):
     return (peso * precio_kg).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-def _viaje(id_viaje):
-    v = db.session.get(ProgramacionViaje, id_viaje)
-    if v and v.estado_viaje == 'Programado' and v.salida_programada > datetime.now():
-        return v
-    flash('Este viaje ya no admite encomiendas. Elige otra salida.', 'warning')
-    return None
-
-
-def _info(v):
-    r = v.horario.ruta
-    return {'id_viaje': v.id_viaje, 'fecha': v.fecha_salida, 'hora': v.salida_programada.strftime('%H:%M'),
-            'origen': r.origen.nombre_sede, 'origen_ciudad': r.origen.ciudad,
-            'destino': r.destino.nombre_sede, 'destino_ciudad': r.destino.ciudad,
-            'precio_kg': float(v.horario.precio_kg_carga_base)}
-
-
-def _carga_libre(v):
-    """Kg que aún caben en el vehículo del viaje (None si no hay vehículo asignado)."""
-    veh = v.vehiculo_efectivo
-    if not veh:
+def _carga_libre(s):
+    """Kg que aún caben en el vehículo (None si no hay vehículo asignado)."""
+    if not s.vehiculo:
         return None
-    usado = db.session.query(func.coalesce(func.sum(DetalleEncomienda.peso_kg), 0)).filter(
-        DetalleEncomienda.id_viaje == v.id_viaje, DetalleEncomienda.estado_entrega != 'Perdido').scalar()
-    return max(Decimal(veh.capacidad_carga_kg) - Decimal(usado), Decimal(0))
+    usado = 0
+    if s.viaje:
+        usado = db.session.query(func.coalesce(func.sum(DetalleEncomienda.peso_kg), 0)).filter(
+            DetalleEncomienda.id_viaje == s.viaje.id_viaje,
+            DetalleEncomienda.estado_entrega != 'Perdido').scalar()
+    return max(Decimal(s.vehiculo.capacidad_carga_kg) - Decimal(usado), Decimal(0))
 
 
-def _error_capacidad(v, peso):
-    libre = _carga_libre(v)
+def _error_capacidad(s, peso):
+    libre = _carga_libre(s)
     if libre is not None and peso > libre:
         return f'Este viaje solo admite {libre:.1f} kg más de carga.'
     return None
+
+
+def _temp(id_horario, fecha):
+    t = session.get('encomienda_temp')
+    return t if t and t.get('h') == id_horario and t.get('f') == fecha else None
 
 
 def _leer(form):
@@ -85,56 +77,62 @@ def _leer(form):
 
 
 # ---------------------------------------------------------------- PASO 2: envío
-@encomiendas_bp.route('/viaje/<int:id_viaje>/envio', methods=['GET', 'POST'])
-def envio(id_viaje):
-    v = _viaje(id_viaje)
-    if not v:
+@encomiendas_bp.route('/horario/<int:id_horario>/<fecha>/envio', methods=['GET', 'POST'])
+def envio(id_horario, fecha):
+    s = resolver(id_horario, fecha, AVISO)
+    if not s:
         return redirect(url_for('public.buscar_viaje'))
     datos = {}
     if request.method == 'POST':
         datos, err, peso = _leer(request.form)
         if not err:
-            e = _error_capacidad(v, peso)
+            e = _error_capacidad(s, peso)
             err = [e] if e else []
         if err:
             for e in err:
                 flash(e, 'warning')
         else:
-            session['encomienda_temp'] = {'id_viaje': id_viaje, **datos}
-            return redirect(url_for('encomiendas.pago', id_viaje=id_viaje))
-    elif session.get('encomienda_temp', {}).get('id_viaje') == id_viaje:
+            session['encomienda_temp'] = {'h': id_horario, 'f': fecha, **datos}
+            return redirect(url_for('encomiendas.pago', id_horario=id_horario, fecha=fecha))
+    elif _temp(id_horario, fecha):
         datos = session['encomienda_temp']
-    libre = _carga_libre(v)
+    libre = _carga_libre(s)
     limite = PESO_MAX if libre is None else min(PESO_MAX, libre)
     if limite < PESO_MIN:
         flash('Este viaje ya no tiene capacidad de carga. Elige otra salida.', 'warning')
         return redirect(url_for('public.buscar_viaje'))
-    return render_template('public/encomienda_envio.html', viaje=_info(v), datos=datos,
+    return render_template('public/encomienda_envio.html', viaje=s.info(), datos=datos,
                            peso_min=float(PESO_MIN), limite=float(limite),
                            libre=None if libre is None else float(libre))
 
 
-# ---------------------------------------------------------------- PASO 3: pago
-@encomiendas_bp.route('/viaje/<int:id_viaje>/pago', methods=['GET', 'POST'])
-def pago(id_viaje):
-    v = _viaje(id_viaje)
-    t = session.get('encomienda_temp')
-    if not v:
+# ---------------------------------------------------------------- PASO 3: pago (aquí se crea el viaje)
+@encomiendas_bp.route('/horario/<int:id_horario>/<fecha>/pago', methods=['GET', 'POST'])
+def pago(id_horario, fecha):
+    s = resolver(id_horario, fecha, AVISO)
+    if not s:
         return redirect(url_for('public.buscar_viaje'))
-    if not t or t.get('id_viaje') != id_viaje:
-        return redirect(url_for('encomiendas.envio', id_viaje=id_viaje))
+    t = _temp(id_horario, fecha)
+    if not t:
+        return redirect(url_for('encomiendas.envio', id_horario=id_horario, fecha=fecha))
 
     peso = Decimal(t['peso'].replace(',', '.'))
-    monto = _monto(peso, Decimal(v.horario.precio_kg_carga_base))
+    monto = _monto(peso, Decimal(s.h.precio_kg_carga_base))
 
     if request.method == 'POST':
         metodo = request.form.get('metodo', '')
         if metodo not in dict(METODOS):
             flash('Elige un método de pago.', 'warning')
-        elif _error_capacidad(v, peso):
-            flash(_error_capacidad(v, peso), 'warning')
         else:
             try:
+                v = crear_viaje(s)
+                if v.estado_viaje != 'Programado':
+                    raise ValueError('El viaje ya no admite encomiendas.')
+                err = _error_capacidad(s, peso)
+                if err:
+                    db.session.rollback()
+                    flash(err, 'warning')
+                    return redirect(url_for('encomiendas.envio', id_horario=id_horario, fecha=fecha))
                 cli = Cliente.query.filter_by(tipo_doc='DNI', num_documento=t['dni_rem']).first()
                 if not cli:
                     cli = Cliente(tipo_doc='DNI', num_documento=t['dni_rem'])
@@ -146,7 +144,7 @@ def pago(id_viaje):
                 db.session.add(reserva)
                 db.session.flush()
                 enc = DetalleEncomienda(
-                    id_reserva=reserva.id_reserva, id_viaje=id_viaje, dni_destinatario=t['dni_dest'],
+                    id_reserva=reserva.id_reserva, id_viaje=v.id_viaje, dni_destinatario=t['dni_dest'],
                     nombre_destinatario=t['nombre_dest'], telefono_destinatario=t['tel_dest'],
                     descripcion_contenido=t['descripcion'], peso_kg=peso, clave_recojo=_clave(t['dni_dest']),
                     estado_entrega='Registrado', precio_pagado=monto)
@@ -159,7 +157,7 @@ def pago(id_viaje):
                 db.session.rollback()
                 flash(f'Error al registrar la encomienda: {e}', 'danger')
 
-    return render_template('public/encomienda_pago.html', viaje=_info(v), t=t, peso=float(peso),
+    return render_template('public/encomienda_pago.html', viaje=s.info(), t=t, peso=float(peso),
                            monto=float(monto), metodos=METODOS)
 
 
@@ -180,7 +178,7 @@ def comprobante(id_encomienda):
              'nombre_destinatario': enc.nombre_destinatario, 'telefono_destinatario': enc.telefono_destinatario,
              'descripcion': enc.descripcion_contenido, 'peso_kg': float(enc.peso_kg),
              'clave_recojo': enc.clave_recojo, 'monto': float(enc.precio_pagado)}
-    v = _info(enc.viaje)
+    v = Salida(enc.viaje.horario, enc.viaje.fecha_salida, enc.viaje).info()
     v['fecha_salida'], v['hora_salida'] = v['fecha'], v['hora']
     return render_template('public/encomienda_comprobante.html', e=datos, viaje=v)
 

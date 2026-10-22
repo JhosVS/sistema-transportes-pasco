@@ -4,8 +4,9 @@ import math
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy.exc import IntegrityError
 
-from models import Cliente, DetallePasaje, ProgramacionViaje, ReservaVenta, db
+from models import Cliente, DetallePasaje, ReservaVenta, db
 from routes.utils.reniec import obtener_datos_dni
+from routes.utils.salidas import crear_viaje, resolver
 
 reservas_bp = Blueprint('reservas', __name__, url_prefix='/reserva')
 
@@ -18,33 +19,9 @@ def api_dni(dni):
     return jsonify(obtener_datos_dni(dni))
 
 
-# ---------------------------------------------------------------- helpers
-def _viaje_valido(id_viaje):
-    v = db.session.get(ProgramacionViaje, id_viaje)
-    if not v or v.estado_viaje != 'Programado' or v.salida_programada <= datetime.now():
-        flash('El viaje ya no está disponible.', 'warning')
-        return None
-    return v
-
-
-def _info(v):
-    r = v.horario.ruta
-    veh = v.vehiculo_efectivo
-    return {'id_viaje': v.id_viaje, 'fecha': v.fecha_salida,
-            'hora': v.salida_programada.strftime('%H:%M'),
-            'llegada': v.llegada_programada.strftime('%H:%M'),
-            'precio': float(v.precio_pasaje), 'capacidad': veh.capacidad_asientos if veh else 40,
-            'origen_ciudad': r.origen.ciudad, 'destino_ciudad': r.destino.ciudad,
-            'origen': r.origen.nombre_sede, 'destino': r.destino.nombre_sede}
-
-
-def _ocupados(v):
-    return [p.numero_asiento for p in v.pasajes_activos]
-
-
-def _temp(id_viaje):
+def _temp(id_horario, fecha):
     t = session.get('reserva_temp')
-    return t if t and t.get('id_viaje') == id_viaje and t.get('asientos') else None
+    return t if t and t.get('h') == id_horario and t.get('f') == fecha and t.get('asientos') else None
 
 
 def _fecha(txt):
@@ -55,12 +32,13 @@ def _fecha(txt):
 
 
 # ---------------------------------------------------------------- PASO 2: asientos
-@reservas_bp.route('/viaje/<int:id_viaje>/asientos', methods=['GET', 'POST'])
-def asientos(id_viaje):
-    v = _viaje_valido(id_viaje)
-    if not v:
+@reservas_bp.route('/horario/<int:id_horario>/<fecha>/asientos', methods=['GET', 'POST'])
+def asientos(id_horario, fecha):
+    s = resolver(id_horario, fecha)
+    if not s:
         return redirect(url_for('public.buscar_viaje'))
-    info, ocupados = _info(v), _ocupados(v)
+    info, ocupados = s.info(), s.ocupados()
+    destino = dict(id_horario=id_horario, fecha=fecha)
 
     if request.method == 'POST':
         lista = sorted({int(a) for a in request.form.get('asientos', '').split(',') if a.isdigit()})
@@ -73,29 +51,30 @@ def asientos(id_viaje):
         elif any(a in ocupados for a in lista):
             flash('Alguno de los asientos ya fue ocupado. Elige otros.', 'danger')
         else:
-            previo = _temp(id_viaje)
-            session['reserva_temp'] = {'id_viaje': id_viaje, 'asientos': lista,
+            previo = _temp(id_horario, fecha)
+            session['reserva_temp'] = {'h': id_horario, 'f': fecha, 'asientos': lista,
                                        'pasajeros': previo.get('pasajeros', {}) if previo else {},
                                        'contacto': previo.get('contacto', {}) if previo else {}}
-            return redirect(url_for('reservas.pasajeros', id_viaje=id_viaje))
-        return redirect(url_for('reservas.asientos', id_viaje=id_viaje))
+            return redirect(url_for('reservas.pasajeros', **destino))
+        return redirect(url_for('reservas.asientos', **destino))
 
-    previo = _temp(id_viaje)
+    previo = _temp(id_horario, fecha)
     return render_template('public/paso2_asientos.html', viaje=info, ocupados=ocupados,
                            num_filas=math.ceil(info['capacidad'] / 4), max_asientos=MAX_ASIENTOS,
                            elegidos=previo['asientos'] if previo else [])
 
 
 # ---------------------------------------------------------------- PASO 3: pasajeros
-@reservas_bp.route('/viaje/<int:id_viaje>/pasajeros', methods=['GET', 'POST'])
-def pasajeros(id_viaje):
-    v = _viaje_valido(id_viaje)
-    if not v:
+@reservas_bp.route('/horario/<int:id_horario>/<fecha>/pasajeros', methods=['GET', 'POST'])
+def pasajeros(id_horario, fecha):
+    s = resolver(id_horario, fecha)
+    if not s:
         return redirect(url_for('public.buscar_viaje'))
-    temp = _temp(id_viaje)
+    destino = dict(id_horario=id_horario, fecha=fecha)
+    temp = _temp(id_horario, fecha)
     if not temp:
         flash('Primero elige tus asientos.', 'info')
-        return redirect(url_for('reservas.asientos', id_viaje=id_viaje))
+        return redirect(url_for('reservas.asientos', **destino))
     lista = temp['asientos']
 
     if request.method == 'POST':
@@ -124,7 +103,7 @@ def pasajeros(id_viaje):
         else:
             temp.update(pasajeros=pax, contacto=contacto)
             session['reserva_temp'] = temp
-            return redirect(url_for('reservas.pago', id_viaje=id_viaje))
+            return redirect(url_for('reservas.pago', **destino))
     else:
         datos = {}
         for a, p in temp.get('pasajeros', {}).items():
@@ -132,31 +111,40 @@ def pasajeros(id_viaje):
                           f'sexo_{a}': p['sexo']})
         datos.update(temp.get('contacto', {}))
 
-    return render_template('public/paso3_pasajeros.html', viaje=_info(v), asientos=lista, datos=datos)
+    return render_template('public/paso3_pasajeros.html', viaje=s.info(), asientos=lista, datos=datos)
 
 
-# ---------------------------------------------------------------- PASO 4: pago simulado
-@reservas_bp.route('/viaje/<int:id_viaje>/pago', methods=['GET', 'POST'])
-def pago(id_viaje):
-    v = _viaje_valido(id_viaje)
-    if not v:
+# ---------------------------------------------------------------- PASO 4: pago (aquí se crea el viaje)
+@reservas_bp.route('/horario/<int:id_horario>/<fecha>/pago', methods=['GET', 'POST'])
+def pago(id_horario, fecha):
+    s = resolver(id_horario, fecha)
+    if not s:
         return redirect(url_for('public.buscar_viaje'))
-    temp = _temp(id_viaje)
+    destino = dict(id_horario=id_horario, fecha=fecha)
+    temp = _temp(id_horario, fecha)
     if not temp or not temp.get('pasajeros'):
         flash('Completa los datos de los pasajeros.', 'info')
-        return redirect(url_for('reservas.pasajeros', id_viaje=id_viaje))
-    info, lista = _info(v), temp['asientos']
+        return redirect(url_for('reservas.pasajeros', **destino))
+    info, lista = s.info(), temp['asientos']
     total = info['precio'] * len(lista)
 
     if request.method == 'POST':
         metodo = request.form.get('metodo', '')
         if metodo not in dict(METODOS_PAGO):
             flash('Elige un método de pago.', 'warning')
-            return redirect(url_for('reservas.pago', id_viaje=id_viaje))
-        if any(a in _ocupados(v) for a in lista):
-            flash('Alguno de los asientos fue ocupado mientras completabas la compra. Elige otros.', 'danger')
-            return redirect(url_for('reservas.asientos', id_viaje=id_viaje))
+            return redirect(url_for('reservas.pago', **destino))
         try:
+            v = crear_viaje(s)
+            if v.estado_viaje != 'Programado':
+                raise ValueError('El viaje ya no está disponible.')
+            ocupado = (db.session.query(DetallePasaje)
+                       .filter(DetallePasaje.id_viaje == v.id_viaje, DetallePasaje.estado != 'anulado',
+                               DetallePasaje.numero_asiento.in_(lista)).count())
+            if ocupado:
+                db.session.rollback()
+                flash('Alguno de los asientos fue ocupado mientras completabas la compra. Elige otros.', 'danger')
+                return redirect(url_for('reservas.asientos', **destino))
+
             comp = temp['pasajeros'][str(lista[0])]       # el comprador es el pasajero del primer asiento
             cli = Cliente.query.filter_by(tipo_doc='DNI', num_documento=comp['dni']).first()
             if not cli:
@@ -169,14 +157,15 @@ def pago(id_viaje):
             cli.email = temp['contacto']['email']
             db.session.flush()
 
-            reserva = ReservaVenta(id_cliente=cli.id_cliente, monto_total=total, metodo_pago=metodo,
-                                   canal_venta='web', tipo_comprobante='boleta', estado='pagada')
+            reserva = ReservaVenta(id_cliente=cli.id_cliente, monto_total=float(v.precio_pasaje) * len(lista),
+                                   metodo_pago=metodo, canal_venta='web', tipo_comprobante='boleta',
+                                   estado='pagada')
             db.session.add(reserva)
             db.session.flush()
             for a in lista:
                 p = temp['pasajeros'][str(a)]
                 db.session.add(DetallePasaje(
-                    id_reserva=reserva.id_reserva, id_viaje=id_viaje, numero_asiento=a,
+                    id_reserva=reserva.id_reserva, id_viaje=v.id_viaje, numero_asiento=a,
                     dni_pasajero=p['dni'], nombre_pasajero=p['nombre'],
                     fecha_nacimiento=_fecha(p['nac']), sexo=p['sexo'] or None,
                     precio_pagado=v.precio_pasaje, estado='vendido'))
@@ -187,7 +176,7 @@ def pago(id_viaje):
         except IntegrityError:
             db.session.rollback()
             flash('Un asiento acaba de ser ocupado. Elige otros.', 'danger')
-            return redirect(url_for('reservas.asientos', id_viaje=id_viaje))
+            return redirect(url_for('reservas.asientos', **destino))
         except Exception as e:
             db.session.rollback()
             flash(f'Error al procesar la compra: {e}', 'danger')
