@@ -1,52 +1,95 @@
 {% extends 'public/base_public.html' %}
-
 {% block title %}Rastrear Encomienda{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 650px;">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<style>
+    .linea { display: flex; justify-content: space-between; position: relative; margin: 8px 0 4px; }
+    .linea::before { content: ''; position: absolute; top: 15px; left: 8%; right: 8%; height: 3px; background: #dee2e6; }
+    .paso { text-align: center; flex: 1; position: relative; font-size: .78rem; }
+    .punto { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 4px; display: flex; align-items: center;
+             justify-content: center; background: #dee2e6; color: #6c757d; position: relative; font-weight: 700; }
+    .hecho .punto { background: #198754; color: #fff; }
+    .actual .punto { background: #ffc107; color: #000; box-shadow: 0 0 0 5px rgba(255,193,7,.3); }
+    .bus-ico { font-size: 24px; line-height: 24px; text-align: center; }
+</style>
 
-    <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-1"><i class="bi bi-box-seam text-warning me-2"></i>Rastrear Encomienda</h5>
-            <p class="text-muted small mb-3">Ingrese el DNI del destinatario y la clave de recojo.</p>
+<div class="w-100">
+    <img src="{{ url_for('static', filename='img/banner.png') }}" class="img-fluid w-100 d-block"
+        alt="Banner Transportes Pasco">
+</div>
 
-            <form method="POST" class="row g-3 align-items-end">
-                <div class="col-md-5">
-                    <label class="form-label small fw-semibold text-muted">DNI DESTINATARIO</label>
-                    <input type="text" name="dni_destinatario" class="form-control" maxlength="8"
-                           pattern="[0-9]{8}" required value="{{ dni }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label small fw-semibold text-muted">CLAVE DE RECOJO</label>
-                    <input type="text" name="clave_recojo" class="form-control text-uppercase" maxlength="10"
-                           required value="{{ clave }}">
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Consultar</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="container py-4" style="max-width: 760px;">
+    <div class="card border-0 shadow-sm rounded-3 mb-4"><div class="card-body p-4">
+        <h5 class="fw-bold mb-1"><i class="bi bi-box-seam text-warning me-2"></i>Estado encomienda</h5>
+        <p class="text-muted small mb-3">Ingresa el DNI del destinatario y la clave de recojo.</p>
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-5"><label class="form-label small fw-semibold text-muted">DNI DESTINATARIO</label>
+                <input name="dni" class="form-control" maxlength="8" pattern="[0-9]{8}" required value="{{ dni }}"></div>
+            <div class="col-md-4"><label class="form-label small fw-semibold text-muted">CLAVE DE RECOJO</label>
+                <input name="clave" class="form-control text-uppercase" maxlength="10" required value="{{ clave }}"></div>
+            <div class="col-md-3"><button class="btn btn-warning w-100 fw-bold text-dark">Consultar</button></div>
+        </form>
+    </div></div>
 
-    {% if resultados %}
-        {% set colores = {'Registrado': 'secondary', 'En transito': 'primary', 'Entregado': 'success', 'Perdido': 'danger'} %}
-        {% for r in resultados %}
-        <div class="card border-0 shadow-sm rounded-3 mb-3">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark">{{ r.origen }} ➔ {{ r.destino }}</span>
-                    <span class="badge bg-{{ colores.get(r.estado, 'secondary') }} px-3 py-2">{{ r.estado }}</span>
-                </div>
-                <div class="small text-muted">
-                    Salida: {{ r.fecha_salida.strftime('%d/%m/%Y') if r.fecha_salida.strftime else r.fecha_salida }} - {{ r.hora_salida }} hrs
-                </div>
-                <div class="small text-muted">Destinatario: {{ r.nombre_destinatario }} · Peso: {{ "%.2f"|format(r.peso_kg) }} kg</div>
-                {% if r.estado == 'Entregado' and r.entregado_en %}
-                    <div class="small text-success mt-1">Entregado el {{ r.entregado_en.strftime('%d/%m/%Y %H:%M') }}</div>
-                {% endif %}
+    {% for e in envios or [] %}
+    <div class="card border-0 shadow-sm rounded-3 mb-4"><div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <div class="fw-bold fs-5">{{ e.origen }} → {{ e.destino }}</div>
+                <div class="small text-muted">Para {{ e.destinatario }} · {{ "%.1f"|format(e.peso) }} kg · {{ e.contenido }}</div>
             </div>
+            <span class="badge bg-{{ 'danger' if e.perdido else ('success' if e.etapa == 4 else 'warning text-dark') }} px-3 py-2">
+                {{ 'Extraviada' if e.perdido else etapas[e.etapa - 1] }}</span>
         </div>
-        {% endfor %}
+
+        {% if e.perdido %}<div class="alert alert-danger small">Esta encomienda figura como extraviada. Comunícate con la agencia.</div>{% endif %}
+        {% if e.cancelado %}<div class="alert alert-warning small">El viaje fue cancelado. La agencia te contactará para reprogramar el envío.</div>{% endif %}
+
+        <div class="linea">
+            {% for nombre in etapas %}
+            <div class="paso {{ 'hecho' if loop.index < e.etapa else ('actual' if loop.index == e.etapa else '') }}">
+                <div class="punto">{{ '✓' if loop.index < e.etapa else loop.index }}</div>{{ nombre }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="mapa{{ loop.index0 }}" class="rounded-3 my-3" style="height:280px"></div>
+
+        <div class="row small g-2">
+            <div class="col-md-6"><span class="text-muted">Salida:</span> <strong>{{ e.salida.strftime('%d/%m/%Y %H:%M') }}</strong></div>
+            <div class="col-md-6"><span class="text-muted">Llegada estimada:</span> <strong>{{ e.llegada.strftime('%d/%m/%Y %H:%M') }}</strong></div>
+            {% if e.etapa == 2 %}<div class="col-12"><div class="progress" style="height:8px"><div class="progress-bar bg-warning" style="width:{{ e.progreso }}%"></div></div>
+                <span class="text-muted">Recorrido estimado: {{ e.progreso }}%</span></div>{% endif %}
+            {% if e.etapa == 3 %}<div class="col-12 alert alert-success mb-0 mt-2">Lista para recoger en <strong>{{ e.terminal_destino }}</strong> con tu DNI y la clave.</div>{% endif %}
+            {% if e.etapa == 4 and e.entregado_en %}<div class="col-12 text-success fw-semibold">Entregada el {{ e.entregado_en.strftime('%d/%m/%Y %H:%M') }}</div>{% endif %}
+        </div>
+    </div></div>
+    {% endfor %}
+
+    {% if envios %}
+    <div class="text-muted small text-center">La posición en el mapa es una estimación según el horario del viaje; no es un GPS en tiempo real.</div>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    const MAPAS = {{ envios|map(attribute='mapa')|list|tojson }};
+    MAPAS.forEach((m, i) => {
+        const cont = document.getElementById('mapa' + i);
+        if (!m.o || !m.d) { cont.innerHTML = '<div class="text-muted small p-4">Mapa no disponible: faltan coordenadas de las sedes.</div>'; return; }
+        const map = L.map(cont, { scrollWheelZoom: false });
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+        const O = [m.o[0], m.o[1]], D = [m.d[0], m.d[1]];
+        L.polyline([O, D], { color: '#6c757d', dashArray: '6 6', weight: 3 }).addTo(map);
+        if (m.p > 0) L.polyline([O, [O[0] + (D[0] - O[0]) * m.p, O[1] + (D[1] - O[1]) * m.p]], { color: '#ffc107', weight: 5 }).addTo(map);
+        L.marker(O).addTo(map).bindPopup('Origen: ' + m.o[2]);
+        L.marker(D).addTo(map).bindPopup('Destino: ' + m.d[2]);
+        if (m.etapa === 2) {
+            const pos = [O[0] + (D[0] - O[0]) * m.p, O[1] + (D[1] - O[1]) * m.p];
+            L.marker(pos, { icon: L.divIcon({ html: '<div class="bus-ico">🚌</div>', className: '', iconSize: [24, 24] }) })
+                .addTo(map).bindPopup('Ubicación estimada');
+        }
+        map.fitBounds([O, D], { padding: [40, 40] });
+    });
+    </script>
     {% endif %}
 </div>
 {% endblock %}

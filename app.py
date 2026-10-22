@@ -24,7 +24,9 @@ from routes.admin.programacion import programacion_bp
 from routes.admin.asistente import asistente_bp
 from routes.admin.tareas import tareas_bp
 from routes.utils.permisos import puede
+
 from flask import flash
+from routes.public.chatbot import chatbot_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -54,6 +56,7 @@ app.register_blueprint(mantenimientos_bp)
 app.register_blueprint(programacion_bp)
 app.register_blueprint(asistente_bp)
 app.register_blueprint(tareas_bp)
+app.register_blueprint(chatbot_bp)
 
 # Proteger rutas administrativas
 @app.before_request

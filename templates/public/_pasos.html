@@ -1,5 +1,6 @@
+{% set lista = etapas_flujo or ['Viaje', 'Asientos', 'Pasajeros', 'Pago'] %}
 <div class="d-flex justify-content-center gap-2 gap-md-4 mb-4 small">
-    {% for n, t in [(1, 'Viaje'), (2, 'Asientos'), (3, 'Pasajeros'), (4, 'Pago')] %}
+    {% for t in lista %}{% set n = loop.index %}
     <span class="{{ 'fw-bold text-dark' if n == paso else 'text-muted' }}">
         <span class="badge rounded-pill {{ 'bg-warning text-dark' if n == paso else ('bg-dark' if n < paso else 'bg-secondary-subtle text-muted') }}">{{ n }}</span> {{ t }}
     </span>

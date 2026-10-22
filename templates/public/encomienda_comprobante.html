@@ -78,8 +78,9 @@
             <span class="text-success">S/ {{ "%.2f"|format(e.monto) }}</span>
         </div>
 
-        <div class="text-center text-muted small mt-4 pt-3 border-top">
-            Puede consultar el estado en <strong>Rastrear Encomienda</strong> con el DNI del destinatario y la clave.
+        <div class="text-center mt-4 pt-3 border-top no-print">
+            <a href="{{ url_for('encomiendas.seguimiento', dni=e.dni_destinatario, clave=e.clave_recojo) }}"
+            class="btn btn-outline-dark btn-sm"><i class="bi bi-geo-alt me-1"></i>Rastrear esta encomienda</a>
         </div>
     </div>
 </div>
