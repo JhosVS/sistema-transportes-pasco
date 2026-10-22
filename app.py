@@ -23,6 +23,8 @@ from routes.admin.mantenimientos import mantenimientos_bp
 from routes.admin.programacion import programacion_bp
 from routes.admin.asistente import asistente_bp
 from routes.admin.tareas import tareas_bp
+from routes.utils.permisos import puede
+from flask import flash
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -56,8 +58,18 @@ app.register_blueprint(tareas_bp)
 # Proteger rutas administrativas
 @app.before_request
 def restringir_acceso_admin():
-    if request.path.startswith('/admin') and 'user_id' not in session:
+    if not request.path.startswith('/admin'):
+        return
+    if 'user_id' not in session:
         return redirect(url_for('auth.login'))
+    if not puede(session.get('user_rol', 'admin'), request.path):
+        flash('No tienes permiso para acceder a ese módulo.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+
+@app.context_processor
+def permisos_en_plantillas():
+    rol = session.get('user_rol', 'admin')
+    return {'puede_ver': lambda prefijo: puede(rol, prefijo)}
 
 @app.route('/')
 def home():

@@ -38,6 +38,7 @@ def login():
 
             session['user_id'] = usuario.id_usuario
             session['user_nombre'] = usuario.nombres
+            session['user_rol'] = usuario.rol.codigo
             session['user_email'] = usuario.email
             session['id_sede'] = usuario.id_sede
             session['nombre_sede'] = usuario.sede.nombre_sede if usuario.sede else 'Sin Sede'

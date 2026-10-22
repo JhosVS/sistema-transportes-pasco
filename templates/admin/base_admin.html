@@ -21,66 +21,87 @@
             </div>
 
             <ul class="nav nav-pills flex-column mb-auto p-2">
+                {% if puede_ver('/admin/dashboard') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"
                         href="{{ url_for('admin.dashboard') }}">
                         <i class="bi bi-speedometer2 me-2"></i> <span>Dashboard</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/sedes') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if 'sedes' in request.endpoint %}active{% endif %}"
                         href="{{ url_for('sedes.index') }}">
                         <i class="bi bi-geo-alt me-2"></i> <span>Sedes</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/vehiculos') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if 'vehiculos' in request.endpoint %}active{% endif %}"
                         href="{{ url_for('vehiculos.index') }}">
                         <i class="bi bi-bus-front me-2"></i> <span>Vehículos</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/conductores') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if 'conductores' in request.endpoint %}active{% endif %}"
                         href="{{ url_for('conductores.index') }}">
                         <i class="bi bi-person-badge me-2"></i> <span>Conductores</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/rutas') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if 'rutas' in request.endpoint %}active{% endif %}"
                         href="{{ url_for('rutas.index') }}">
                         <i class="bi bi-signpost-split me-2"></i> <span>Rutas</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/horarios') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if 'viajes' in request.endpoint or 'horarios' in request.endpoint %}active{% endif %}"
                         href="{{ url_for('admin_viajes.index') }}">
                         <i class="bi bi-calendar-range me-2"></i> <span>Horarios / Viajes</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/programacion') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('programacion.') %}active{% endif %}"
                         href="{{ url_for('programacion.index') }}">
                         <i class="bi bi-calendar-check me-2"></i> <span>Viajes Programados</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/encomiendas') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('encomiendas_admin.') %}active{% endif %}"
                         href="{{ url_for('encomiendas_admin.index') }}">
                         <i class="bi bi-box-seam me-2"></i> <span>Encomiendas</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/mantenimientos') %}
                 <li class="nav-item">
                     <a class="nav-link mb-1 {% if request.endpoint and request.endpoint.startswith('mantenimientos.') %}active{% endif %}"
                         href="{{ url_for('mantenimientos.index') }}">
                         <i class="bi bi-tools me-2"></i> <span>Mantenimientos</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/incidentes') %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint and request.endpoint.startswith('incidentes.') %}active{% endif %}"
                         href="{{ url_for('incidentes.listar_incidentes') }}">
                         <i class="bi bi-exclamation-triangle me-2"></i> <span>Incidentes</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/mapa') %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint and request.endpoint.startswith('mapa_admin.') %}active{% endif %}" 
                     href="{{ url_for('mapa_admin.mostrar_mapa') }}">
@@ -88,6 +109,8 @@
                         <span>Mapa de Sedes</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/predicciones') %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint and request.endpoint.startswith('predicciones.') %}active{% endif %}" 
                     href="{{ url_for('predicciones.dashboard_predicciones') }}">
@@ -95,6 +118,8 @@
                         <span>Predicción de Demanda</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if puede_ver('/admin/asistente') %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint and request.endpoint.startswith('asistente.') %}active{% endif %}"
                     href="{{ url_for('asistente.index') }}">
@@ -102,6 +127,7 @@
                         <span>Asistente IA</span>
                     </a>
                 </li>
+                {% endif %}
 
             </ul>
 
