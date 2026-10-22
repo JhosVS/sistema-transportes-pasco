@@ -81,6 +81,7 @@ def _leer(form):
             err.append('El peso admite un solo decimal (por ejemplo 1.5).')
     except InvalidOperation:
         err.append('Ingresa un peso válido en kg.')
+    return d, err, peso
 
 
 # ---------------------------------------------------------------- PASO 2: envío
