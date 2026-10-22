@@ -1,140 +1,76 @@
 {% extends "admin/base_admin.html" %}
-
 {% block title %}Mapa de Sedes y Rutas{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold text-dark mb-1">
-                <i class="bi bi-map-fill text-warning me-2"></i>Monitoreo de Sedes & Cobertura Vial
-            </h4>
-            <p class="text-muted small mb-0">Visualización de agencias y red de rutas sobre la red vial de Google Maps.</p>
-        </div>
-        <div>
-            <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
-                <i class="bi bi-google me-1"></i> Google Maps API
-            </span>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<div class="mb-3">
+    <h4 class="fw-bold text-dark mb-1"><i class="bi bi-map-fill text-warning me-2"></i>Sedes y rutas</h4>
+    <p class="text-muted small mb-0">Agencias y rutas activas sobre OpenStreetMap.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div id="mapa" style="height:600px"></div>
         </div>
     </div>
-
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-0">
-            <div id="mapa" style="width: 100%; height: 600px;"></div>
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-dark text-white fw-bold small">Rutas activas ({{ rutas|length }})</div>
+            <div class="list-group list-group-flush small" style="max-height:260px;overflow-y:auto">
+                {% for r in rutas %}
+                <button class="list-group-item list-group-item-action ruta" data-i="{{ loop.index0 }}">
+                    <div class="fw-semibold">{{ r.origen }} → {{ r.destino }}</div>
+                    <div class="text-muted">{{ r.km|int }} km · {{ r.horas }} h</div>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white fw-bold small">Sedes ({{ sedes|length }})</div>
+            <div class="list-group list-group-flush small" style="max-height:260px;overflow-y:auto">
+                {% for s in sedes %}
+                <button class="list-group-item list-group-item-action sede" data-i="{{ loop.index0 }}">
+                    <div class="fw-semibold">{{ s.ciudad }}</div>
+                    <div class="text-muted">{{ s.nombre_sede }}</div>
+                </button>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Datos provenientes de Flask -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const sedes = {{ sedes | tojson }};
-    const rutas = {{ rutas | tojson }};
+const SEDES = {{ sedes | tojson }}, RUTAS = {{ rutas | tojson }};
+const calles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
+const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' });
+const map = L.map('mapa', { center: [-10.67, -76.25], zoom: 7, layers: [calles] });
+L.control.layers({ 'Mapa': calles, 'Satélite': satelite }).addTo(map);
+
+const icono = L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -17],
+    html: '<div style="background:#ffc107;border:2px solid #000;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 7px rgba(0,0,0,.3)"><i class="bi bi-bus-front-fill"></i></div>' });
+
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const marcadores = SEDES.map(s => L.marker([s.latitud, s.longitud], { icon: icono }).addTo(map).bindPopup(
+    `<strong>${esc(s.nombre_sede)}</strong><br><span class="text-muted">${esc(s.ciudad)}${s.altitud ? ' · ' + s.altitud + ' msnm' : ''}</span><br>
+     <small>${esc(s.direccion)}</small><br>
+     <a target="_blank" href="https://www.openstreetmap.org/?mlat=${s.latitud}&mlon=${s.longitud}#map=15/${s.latitud}/${s.longitud}">Ver en OpenStreetMap</a>`));
+
+// Las rutas por carretera se piden a OSRM (gratis); si falla, línea recta
+const lineas = RUTAS.map(r => {
+    const linea = L.polyline([r.o, r.d], { color: '#ffc107', weight: 4, opacity: .85, dashArray: '8 8' }).addTo(map);
+    linea.bindTooltip(`${r.origen} → ${r.destino}`);
+    fetch(`https://router.project-osrm.org/route/v1/driving/${r.o[1]},${r.o[0]};${r.d[1]},${r.d[0]}?overview=full&geometries=geojson`)
+        .then(x => x.json())
+        .then(d => { if (d.routes && d.routes[0]) linea.setLatLngs(d.routes[0].geometry.coordinates.map(c => [c[1], c[0]])).setStyle({ dashArray: null, weight: 5 }); })
+        .catch(() => {});
+    return linea;
+});
+
+if (SEDES.length) map.fitBounds(SEDES.map(s => [s.latitud, s.longitud]), { padding: [40, 40] });
+document.querySelectorAll('.sede').forEach(b => b.onclick = () => { const s = SEDES[b.dataset.i]; map.setView([s.latitud, s.longitud], 13); marcadores[b.dataset.i].openPopup(); });
+document.querySelectorAll('.ruta').forEach(b => b.onclick = () => { const l = lineas[b.dataset.i]; map.fitBounds(l.getBounds(), { padding: [40, 40] }); l.openTooltip(); });
 </script>
-
-<script>
-    function iniciarMapa() {
-        // Centro inicial (Pasco, Perú)
-        const centro = { lat: -10.6672, lng: -76.2561 };
-
-        const mapa = new google.maps.Map(document.getElementById("mapa"), {
-            center: centro,
-            zoom: 8,
-            mapTypeId: google.maps.MapTypeId.ROADMAP, // Permite alternar a SATELLITE o HYBRID
-            mapTypeControl: true,
-            mapTypeControlOptions: {
-                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-                position: google.maps.ControlPosition.TOP_RIGHT
-            }
-        });
-
-        const ventana = new google.maps.InfoWindow();
-        const bounds = new google.maps.LatLngBounds();
-
-        // 1. Dibujar Marcadores de las Sedes
-        sedes.forEach(function(sede) {
-            const pos = { 
-                lat: Number(sede.latitud), 
-                lng: Number(sede.longitud) 
-            };
-
-            bounds.extend(pos);
-
-            const marcador = new google.maps.Marker({
-                position: pos,
-                map: mapa,
-                title: sede.nombre_sede,
-                icon: {
-                    url: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"
-                }
-            });
-
-            marcador.addListener("click", function() {
-                const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${pos.lat},${pos.lng}`;
-                const contenidoHtml = `
-                    <div style="padding: 8px; max-width: 230px; font-family: sans-serif;">
-                        <span class="badge bg-dark text-warning fw-bold mb-1" style="font-size: 10px;">AGENCIA PASCO</span>
-                        <h6 style="font-weight: bold; margin-bottom: 5px; color: #212529;">${sede.nombre_sede}</h6>
-                        <p style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">
-                            <i class="bi bi-geo-alt-fill text-danger"></i> ${sede.direccion || "Dirección no registrada"}
-                        </p>
-                        <a href="${googleMapsUrl}" target="_blank" style="display: block; text-align: center; background: #212529; color: #fff; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">
-                            Abrir GPS en Google Maps
-                        </a>
-                    </div>
-                `;
-                ventana.setContent(contenidoHtml);
-                ventana.open(mapa, marcador);
-            });
-        });
-
-        // Autoajustar el zoom para ver todas las sedes
-        if (sedes.length > 0) {
-            mapa.fitBounds(bounds);
-        }
-
-        // 2. Trazar Rutas por Carretera Real utilizando DirectionsService
-        const directionsService = new google.maps.DirectionsService();
-
-        rutas.forEach(function(ruta) {
-            const origen = { lat: Number(ruta.latitud_origen), lng: Number(ruta.longitud_origen) };
-            const destino = { lat: Number(ruta.latitud_destino), lng: Number(ruta.longitud_destino) };
-
-            const directionsRenderer = new google.maps.DirectionsRenderer({
-                map: mapa,
-                suppressMarkers: true, // Evitamos marcadores por defecto (A y B) para usar nuestras sedes
-                polylineOptions: {
-                    strokeColor: "#ffc107",
-                    strokeOpacity: 0.85,
-                    strokeWeight: 6
-                }
-            });
-
-            directionsService.route(
-                {
-                    origin: origen,
-                    destination: destino,
-                    travelMode: google.maps.TravelMode.DRIVING
-                },
-                function(result, status) {
-                    if (status === google.maps.DirectionsStatus.OK) {
-                        directionsRenderer.setDirections(result);
-                    } else {
-                        // Respaldo en línea recta si falla la consulta de ruteo
-                        new google.maps.Polyline({
-                            path: [origen, destino],
-                            geodesic: true,
-                            strokeColor: "#ffc107",
-                            strokeOpacity: 0.8,
-                            strokeWeight: 5,
-                            map: mapa
-                        });
-                    }
-                }
-            );
-        });
-    }
-</script>
-
-<!-- Carga de la API de Google Maps -->
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=iniciarMapa" async defer></script>
 {% endblock %}
