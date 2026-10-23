@@ -1,9 +1,37 @@
 # Sistema de Transporte con Predicción de Alta Ocupación y Agentes en la Nube
 
-> **Proyecto de Investigación y Desarrollo Técnico**  
-> **Autor:** Valladares Solís, Jhoshua Elí  
-> **Institución:** Universidad Nacional Daniel Alcides Carrión (UNDAC)  
-> **Escuela:** Ingeniería de Sistemas y Computación  
+> **Proyecto de Investigación y Desarrollo Técnico**
+>
+> **Autor:** Valladares Solís, Jhoshua Elí
+>
+> **Institución:** Universidad Nacional Daniel Alcides Carrión (UNDAC)
+>
+> **Escuela:** Ingeniería de Sistemas y Computación
+
+---
+
+## 📌 Tabla de Contenidos (Índice)
+
+1. [Credenciales de Prueba para Evaluación](#-credenciales-de-prueba-para-evaluación)
+2. [Descripción General y Contexto del Proyecto](#-descripción-general-y-contexto-del-proyecto)
+3. [Arquitectura y Tecnologías Cloud](#-arquitectura-y-tecnologías-cloud)
+4. [Componentes Principales del Sistema](#-componentes-principales-del-sistema)
+   * [1. Modelo Predictivo de Aprendizaje Automático](#1-modelo-predictivo-de-aprendizaje-automático)
+   * [2. Red Multiagente y Supervisión](#2-red-multiagente-y-supervisión)
+5. [Estructura del Proyecto](#-estructura-del-proyecto)
+6. [Guía de Instalación y Ejecución Local](#-guía-de-instalación-y-ejecución-local-para-evaluadores)
+7. [Explicación Detallada de Variables de Entorno (.env)](#-explicación-detallada-de-variables-de-entorno-env)
+8. [Consideraciones de Seguridad y Buenas Prácticas](#-consideraciones-de-seguridad-y-buenas-prácticas)
+
+---
+
+## 🔑 Credenciales de Prueba para Evaluación
+
+Para facilitar la revisión y evaluación del prototipo desplegado o en ejecución local, utilice la siguiente cuenta administrativa preconfigurada:
+
+| Rol | Correo Electrónico | Contraseña |
+| :--- | :--- | :--- |
+| **Administrador General** | `admin@transportes.com` | `admin123` |
 
 ---
 
@@ -12,6 +40,7 @@
 El presente proyecto implementa un prototipo web de apoyo a la toma de decisiones para la planificación de servicios de transporte interprovincial. El sistema toma como escenario de modelado a la empresa ficticia **Transportes Andina Pasqueña**, la cual opera rutas que conectan la ciudad de **Cerro de Pasco con Lima, Huánuco, Huancayo y Tarma**.
 
 En la operación diaria, la demanda de pasajes presenta variaciones críticas influenciadas por el día de la semana, el mes, las tarifas, la proximidad de fines de semana y, de forma muy marcada, los **días feriados y sus vísperas**. La falta de herramientas predictivas suele conducir a dos problemas operativos fundamentales:
+
 1. **Capacidad insuficiente:** Ausencia de unidades de refuerzo en salidas con sobredemanda, generando pérdida de ingresos y pasajeros no atendidos.
 2. **Uso ineficiente de flota:** Despliegue de buses de gran capacidad en viajes de baja ocupación, incrementando los costos operativos.
 
@@ -34,6 +63,7 @@ El sistema está diseñado bajo una arquitectura web desacoplada, modular y segu
 ## 🤖 Componentes Principales del Sistema
 
 ### 1. Modelo Predictivo de Aprendizaje Automático
+
 El sistema incluye un modelo probabilístico entrenado con **2,577 viajes simulados** ordenados temporalmente. La tarea consiste en predecir la variable binaria `alta_ocupacion` ($\ge 70\%$ de asientos vendidos).
 
 * **Algoritmo Seleccionado:** **Gradient Boosting Classifier** (evaluado y seleccionado frente a Random Forest, Regresión Logística, KNN y Árboles de Decisión por presentar el mayor AUC en validación).
@@ -45,6 +75,7 @@ El sistema incluye un modelo probabilístico entrenado con **2,577 viajes simula
 * **Variables de Entrada:** Día de la semana, mes, día del mes, bandera de fin de semana, feriado nacional, víspera de feriado, ID de ruta, sedes de origen/destino, distancia en km, hora de salida decimal, precio del pasaje y capacidad del vehículo.
 
 ### 2. Red Multiagente y Supervisión
+
 Para transformar los datos brutos y las predicciones en decisiones claras, el sistema despliega una red de agentes con responsabilidades no redundantes:
 
 1. **Orquestador (Motor de Reglas - Sin LLM):** Valida la entrada del usuario, aplica límites de tokens y peticiones, gestiona memoria caché de 10 minutos, direcciona las tareas hacia los agentes especializados y ejecuta rutinas de sincronización.
@@ -85,22 +116,22 @@ sistema-transportes-pasco/
 Siga estos pasos detallados para desplegar y evaluar el prototipo en su entorno local:
 
 ### Prerrequisitos
+
 * **Python 3.10** o superior instalado en el sistema.
 * **Git** instalado.
 * Acceso a una base de datos **MySQL** (local o remota).
 
 ### Paso 1: Clonar el Repositorio
-Abra su terminal o consola de comandos y ejecute:
+
 ```bash
 git clone https://github.com/JhosVS/sistema-transportes-pasco.git
 cd sistema-transportes-pasco
 ```
 
 ### Paso 2: Crear y Activar un Entorno Virtual
-Se recomienda utilizar un entorno virtual para aislar las dependencias del proyecto:
 
 * **En Windows:**
-  ```bash
+  ```cmd
   python -m venv venv
   venv\Scripts\activate
   ```
@@ -111,57 +142,51 @@ Se recomienda utilizar un entorno virtual para aislar las dependencias del proye
   ```
 
 ### Paso 3: Instalar Dependencias
-Instale todos los paquetes requeridos especificados en `requirements.txt`:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Paso 4: Configurar las Variables de Entorno
-Cree un archivo llamado `.env` en la raíz del proyecto basándose en el archivo `.env.example`:
 
-* **En Linux/macOS o PowerShell:**
-  ```bash
-  cp .env.example .env
-  ```
-* **En Windows (CMD):**
-  ```cmd
-  copy .env.example .env
-  ```
+Cree un archivo llamado `.env` en la raíz del proyecto basándose en `.env.example`:
 
-Edite el archivo `.env` recién creado con un editor de texto y complete los valores requeridos (consulte la sección de la guía de variables a continuación).
+```bash
+cp .env.example .env
+```
 
-### Paso 5: Inicializar la Base de Datos y Iniciar el Servidor
-Una vez configuradas las credenciales de la base de datos en el archivo `.env`, ejecute:
+Edite el archivo `.env` recién creado y complete los valores requeridos.
+
+### Paso 5: Inicializar la Base de Datos e Iniciar el Servidor
 
 ```bash
 python run.py
 ```
 
-El servidor web se iniciará de forma predeterminada y estará accesible desde cualquier navegador en la dirección:  
+El servidor web estará accesible desde cualquier navegador en:
+
 👉 **`http://127.0.0.1:5000`**
 
 ---
 
 ## 🔑 Explicación Detallada de Variables de Entorno (`.env`)
 
-Para que el evaluador comprenda la función de cada parámetro de configuración, a continuación se describe el propósito de cada variable definida en el archivo `.env.example`:
-
 | Variable | Tipo | Descripción y Propósito | Ejemplo / Valor por defecto |
-| :--- | :---: | :--- | :--- |
+| :--- | :--- | :--- | :--- |
 | `FLASK_APP` | Texto | Define el punto de entrada de la aplicación para los comandos de Flask. | `run.py` |
-| `FLASK_ENV` | Texto | Establece el entorno de ejecución (`development` para depuración o `production` para despliegue). | `development` |
-| `SECRET_KEY` | Texto | Clave secreta criptográfica utilizada por Flask para firmar cookies de sesión y proteger formularios contra ataques CSRF. | `clave_secreta_para_sesiones_y_flash` |
-| `DB_HOST` | Texto | Dirección de IP o nombre de host del servidor donde está alojada la base de datos MySQL. | `localhost` o servidor de Aiven |
-| `DB_USER` | Texto | Nombre del usuario con permisos para consultar y escribir en la base de datos MySQL. | `root` |
-| `DB_PASSWORD` | Texto | Contraseña de acceso correspondiente al usuario de la base de datos MySQL. | *(Su contraseña local)* |
-| `DB_NAME` | Texto | Nombre exacto del esquema o base de datos relacional del proyecto. | `agencia_transportes` |
-| `DB_PORT` | Número | Puerto TCP de red por el cual escucha el servicio MySQL. | `3306` |
-| `APISPERU_TOKEN` | Texto | Token de autenticación de la API externa ApisPerú utilizada para consultas rápidas de validación de identidad (DNI/RUC). | `tu_token_de_apis_peru` |
-| `GEMINI_API_KEY` | Texto | Llave de API oficial de Google AI Studio requerida para habilitar la comunicación de la red multiagente con el modelo de lenguaje **Google Gemini**. | `tu_token_de_gemini` |
+| `FLASK_ENV` | Texto | Establece el entorno de ejecución (`development` o `production`). | `development` |
+| `SECRET_KEY` | Texto | Clave secreta criptográfica para firmar cookies de sesión y CSRF. | `clave_secreta_para_sesiones_y_flash` |
+| `DB_HOST` | Texto | Dirección IP o host del servidor MySQL. | `localhost` o servidor de Aiven |
+| `DB_USER` | Texto | Nombre del usuario de la base de datos MySQL. | `root` |
+| `DB_PASSWORD` | Texto | Contraseña del usuario de la base de datos MySQL. | *(Su contraseña local)* |
+| `DB_NAME` | Texto | Nombre exacto de la base de datos del proyecto. | `agencia_transportes` |
+| `DB_PORT` | Número | Puerto TCP de red por el cual escucha MySQL. | `3306` |
+| `APISPERU_TOKEN` | Texto | Token de la API externa ApisPerú para consultas de DNI/RUC. | `tu_token_de_apis_peru` |
+| `GEMINI_API_KEY` | Texto | Llave de API oficial de Google AI Studio para los agentes (**Google Gemini**). | `tu_token_de_gemini` |
 
 ---
 
 ## 🛡️ Consideraciones de Seguridad y Buenas Prácticas
 
-1. **Protección de Secretos:** Ninguna clave de API, contraseña de base de datos o credencial privada está incrustada en el código fuente pública. Todo se gestiona a través de las variables de entorno del archivo `.env` (el cual está incluido en `.gitignore`).
-2. **Supervisión y Control:** Las predicciones emitidas por el modelo de Machine Learning y las recomendaciones formuladas por la red multiagente actúan exclusivamente como herramientas de apoyo. Ninguna acción destructiva o cambio tarifario se ejecuta de forma automática sin confirmación humana explícita.
+1. **Protección de Secretos:** Ninguna clave de API o contraseña se encuentra expuesta en el código fuente pública. Todo se gestiona a través del archivo `.env` (incluido en `.gitignore`).
+2. **Supervisión y Control:** Las predicciones emitidas por el modelo ML y las recomendaciones formuladas por la red multiagente actúan exclusivamente como herramientas de apoyo a la decisión, requiriendo confirmación humana antes de cualquier cambio operativo.
