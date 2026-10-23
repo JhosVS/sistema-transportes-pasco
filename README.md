@@ -1,13 +1,4 @@
 # Sistema de Transporte con Predicción de Alta Ocupación y Agentes en la Nube
-
-> **Proyecto de Investigación y Desarrollo Técnico**
->
-> **Autor:** Valladares Solís, Jhoshua Elí
->
-> **Institución:** Universidad Nacional Daniel Alcides Carrión (UNDAC)
->
-> **Escuela:** Ingeniería de Sistemas y Computación
-
 ---
 
 ## 📌 Tabla de Contenidos (Índice)
